@@ -4,9 +4,9 @@ import subprocess
 import json
 import re
 import os
-from utils.logger import get_logger
 import evdev
 
+from utils.logger import get_logger
 eslog = get_logger(__name__)
 
 class Evmapy():
@@ -39,7 +39,7 @@ class Evmapy():
                 "/usr/share/evmapy/{}.keys" .format (system)
         ]:
             if os.path.exists(keysfile) and not (os.path.isdir(rom) and keysfile == "{}.keys" .format (rom)): # "{}.keys" .format (rom) is forbidden for directories, it must be inside
-                eslog.debug("evmapy on {}".format(keysfile))
+                eslog.debug(f"evmapy on {keysfile}")
                 subprocess.call(["batocera-evmapy", "clear"])
     
                 padActionConfig = json.load(open(keysfile))
@@ -225,6 +225,7 @@ class Evmapy():
                     nplayer += 1
                 return True
         # otherwise, preparation did nothing
+        eslog.debug("no evmapy config file found for system={}, emulator={}".format(system, emulator))
         return False
     
     # remap evmapy trigger (aka up become HAT0Y:max)

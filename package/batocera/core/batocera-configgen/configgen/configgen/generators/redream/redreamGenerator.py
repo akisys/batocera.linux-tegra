@@ -17,7 +17,7 @@ redreamConfig = batoceraFiles.CONF + "/redream"
 
 class RedreamGenerator(Generator):
 
-    def generate(self, system, rom, playersControllers, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, gameResolution):
         redream_exec = redreamConfig + "/redream"
 
         if not os.path.exists(redreamConfig):
@@ -46,9 +46,8 @@ class RedreamGenerator(Generator):
             "x":      "y",
             "y":      "x",
             "start":  "start",
-            "select": "turbo",
-            #hotkey = exit (redream doesn't accecpt button combo's)
-            "hotkey": "exit"
+            "select": "menu",
+            "pageup": "turbo"
         }
 
         HatMap = {
@@ -71,64 +70,55 @@ class RedreamGenerator(Generator):
             controller = playersControllers[index]
             if nplayer <= 4:
                 # dev = ? seems to be 4+
-                ctrlport = "port{}=dev:{},desc:{},type:controller".format(controller.index, 4 + controller.index, controller.guid)
+                ctrlport = f"port{controller.index}=dev:{4 + controller.index},desc:{controller.guid},type:controller"
                 f.write((ctrlport)+ "\n")
                 
-                ctrlprofile = "profile{}=name:{},type:controller,deadzone:12,crosshair:1".format(controller.index, controller.guid)
+                ctrlprofile = "profile{}=name:{},type:controller,deadzone:12,crosshair:1,".format(controller.index, controller.guid)
                 fullprofile = ctrlprofile
                 
-                eslog.debug("CONTROLLER: {} - {}".format(controller.index, controller.guid))
+                eslog.debug(f"CONTROLLER: {controller.index} - {controller.guid}")
                 
                 for index in controller.inputs:
                     input = controller.inputs[index]
-                    eslog.debug("Name: {}, Type: {}, ID: {}, Code: {}".format(input.name, input.type, input.id, input.code))
+                    eslog.debug(f"Name: {input.name}, Type: {input.type}, ID: {input.id}, Code: {input.code}")
                     
                     # [buttons]
                     if input.type == "button" and input.name in ButtonMap:
                         buttonname = ButtonMap[input.name]
-                        fullprofile = fullprofile + ","
-                        fullprofile = fullprofile + "{}:joy{}".format(buttonname, input.id)
+                        fullprofile = fullprofile + "{}:joy{},".format(buttonname, input.id)
                     #on rare occassions when triggers are buttons
                     if input.type == "button" and input.name == "l2":
-                        fullprofile = fullprofile + ","
-                        fullprofile = fullprofile + "ltrig:joy{}".format(input.id)
+                        fullprofile = fullprofile + "ltrig:joy{},".format(input.id)
                     if input.type == "button" and input.name == "r2":
-                        fullprofile = fullprofile + ","
-                        fullprofile = fullprofile + "rtrig:joy{}".format(input.id)
+                        fullprofile = fullprofile + "rtrig:joy{},".format(input.id)
                     #on occassions when dpad directions are buttons
                     if input.type == "button":
                         if input.name == "up" or input.name == "down" or input.name == "left" or input.name == "right":
-                            fullprofile = fullprofile + ","
-                            fullprofile = fullprofile + "dpad_{}:joy{}".format(input.name, input.id)
+                            fullprofile = fullprofile + "dpad_{}:joy{},".format(input.name, input.id)
                     
                     # [hats]
                     if input.type == "hat" and input.name in HatMap:
                         hatid = HatMap[input.name]
-                        fullprofile = fullprofile + ","
-                        fullprofile = fullprofile + "dpad_{}:hat{}".format(input.name, hatid)
+                        fullprofile = fullprofile + "dpad_{}:hat{},".format(input.name, hatid)
                     
                     # [axis]
                     if input.type == "axis" and input.name in AxisMap:
                         axisid = AxisMap[input.name]
                         #l2/r2 as axis triggers
                         if input.name == "l2":
-                            fullprofile = fullprofile + ","
-                            fullprofile = fullprofile + "ltrig:+axis{}".format(input.id)
+                            fullprofile = fullprofile + "ltrig:+axis{},".format(input.id)
                         if input.name == "r2":
-                            fullprofile = fullprofile + ","
-                            fullprofile = fullprofile + "rtrig:+axis{}".format(input.id)
+                            fullprofile = fullprofile + "rtrig:+axis{},".format(input.id)
                         #handle axis l,r,u,d
                         if input.name == "joystick1left":
-                            fullprofile = fullprofile + ","
-                            fullprofile = fullprofile + "ljoy_left:-axis{}".format(axisid)
-                            fullprofile = fullprofile + ","
-                            fullprofile = fullprofile + "ljoy_right:+axis{}".format(axisid)
+                            fullprofile = fullprofile + "ljoy_left:-axis{},".format(axisid)
+                            fullprofile = fullprofile + "ljoy_right:+axis{},".format(axisid)
                         if input.name == "joystick1up":
-                            fullprofile = fullprofile + ","
-                            fullprofile = fullprofile + "ljoy_up:-axis{}".format(axisid)
-                            fullprofile = fullprofile + ","
-                            fullprofile = fullprofile + "ljoy_down:+axis{}".format(axisid)
+                            fullprofile = fullprofile + "ljoy_up:-axis{},".format(axisid)
+                            fullprofile = fullprofile + "ljoy_down:+axis{},".format(axisid)
                     
+                # add key to exit for evmapy to the end
+                fullprofile = fullprofile + "exit:f10"
                 f.write((fullprofile)+ "\n")
                 nplayer = nplayer + 1
         

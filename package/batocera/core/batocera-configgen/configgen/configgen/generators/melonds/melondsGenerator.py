@@ -13,7 +13,7 @@ eslog = get_logger(__name__)
 
 class MelonDSGenerator(Generator):
 
-    def generate(self, system, rom, playersControllers, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, gameResolution):
         romBasename = path.basename(rom)
         
         # Verify the save path exists
@@ -123,8 +123,8 @@ class MelonDSGenerator(Generator):
                     val = 258
                 else:
                     val = input.id
-                eslog.debug("Name: {} - Var: {}".format(option, val))
-                f.write("{}={}\n".format(option, val))
+                eslog.debug(f"Name: {option} - Var: {val}")
+                f.write(f"{option}={val}\n")
         # Always set ID to 0
         f.write("JoystickID=0\n")
 
