@@ -27,6 +27,7 @@
     - You can continue to use the old save format by entering the following line into batocera.conf: saturn.kronos_use_beetle_saves = disabled
 - cemu to native linux version (v2.0.10)
 - cemu fixes for controllers
+- new Apple 2 MAME options - joystick & alternate models, (LR-MAME & Standalone), hard drive images (Standalone)
 ### Updated
 - pcsx2 to v1.7.3292
 - alsa to 1.2.7.2
@@ -44,6 +45,7 @@
 - flycast emulators to v2.0
 - dosbox to v0.78.1
 - dosbox-x to v0.84.3
+- dosbox-staging to v0.79.1
 - PPSSPP & lr-PPSSPP to v1.13.2
 - nvidia production driver to 520.56.06
 - nvidia legacy driver to 470.141.03
@@ -55,7 +57,7 @@
 - fsuae to July 30 build
 - scummvm to v2.6.1
 - simcoupe to v1.2.11
-- supermodel to Aug 19 2022 build
+- supermodel to Nov 14, 2022 build
 - tsugaru to v20220702
 - vice to 3.6.1
 - linux kernel for x86_64 to 6.0.7
@@ -64,10 +66,10 @@
 - mame to v0.248
 - switchres to sep 25th 2022 build
 - lr-mame to v0.248
-- retroarch to v1.12.0 [Changelog](https://github.com/libretro/RetroArch/blob/master/CHANGES.md#1120)
+- retroarch to v1.13.0
 - libretro cores synced with retroarch v1.11.1 [#7245](https://github.com/batocera-linux/batocera.linux/pull/7245)
 - libretro-core-info to Oct 04 2022 build
-- retroarch-assets to Aug 06 2022 build
+- retroarch-assets to Oct 24 2022 build
 - common-shaders to Apr 16 2022 build
 - glsl-shaders to Sep 23 2022 build
 - alllinuxfirmwares to 20221109
@@ -81,6 +83,7 @@
 - moonlight embedded to 2.5.3
 - proton to v2.7
 - vulkan stack to v1.3.231
+- lr-yabasanshiro to 28th sept build
 ### Fixed
 - lr-mame save state file names
 - slow rpcs3 initial ppu compilation times
@@ -93,8 +96,8 @@
 - Sony touchpad for Mame
 - od-commander fixed for several screen resolutions
 ### Dev  
-- buildroot upgrade to 2022.08.1
-- raspberrypi upgrade linux to 1.20221104 (5.15.76)
+- buildroot upgrade to 2022.08.2
+- odroidxu4 upgrade kernel to 5.19.17
 - rpi1 image renamed to bcm2835
 - rpi2 image renamed to bcm2836
 - rpi3 image renamed to bcm2837
@@ -103,7 +106,7 @@
 - libva updated to 2.16
 - rtl8192eu update to Nov 5, 2022
 - rtl8723ds update to Nov 4, 2022
-- mesa3d to 22.2.3
+- mesa3d to 22.2.4
 - uinput-joystick update to Feb 11, 2022
 
 # 2022/09/20 - batocera.linux 35 - Monarch Butterfly

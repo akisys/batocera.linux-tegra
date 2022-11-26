@@ -202,6 +202,7 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
 	select BR2_PACKAGE_USBUTILS                             # usb key/sd card tools
 	select BR2_PACKAGE_BATOCERA_SPLASH                      # boot splash
 	select BR2_PACKAGE_BATOCERA_SCRIPTS                     # batocera scripts
+    select BR2_PACKAGE_BATOCERA_RESOLUTION                  # batocera resolution
 	select BR2_PACKAGE_BATOCERA_SETTINGS                    # batocera-settings-get/set
 	select BR2_PACKAGE_BATOCERA_AUDIO                       # batocera audio
 	select BR2_PACKAGE_BATOCERA_BLUETOOTH                   # batocera bluetooth
@@ -870,7 +871,7 @@ config BR2_PACKAGE_BATOCERA_PORTS_SYSTEMS
 	select BR2_PACKAGE_LIBRETRO_SUPERBROSWAR	if  !BR2_PACKAGE_BATOCERA_TARGET_BCM2835 && !BR2_PACKAGE_BATOCERA_TARGET_RPIZERO2 && !BR2_PACKAGE_BATOCERA_TARGET_CHA
 
     select BR2_PACKAGE_EDUKE32                  if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY || BR2_PACKAGE_BATOCERA_TARGET_BCM2711
-    select BR2_PACKAGE_GZDOOM                   if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY
+    select BR2_PACKAGE_GZDOOM                   if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY || BR2_aarch64
     select BR2_PACKAGE_RAZE                     if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY
     select BR2_PACKAGE_LIBRETRO_WASM4           if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY #  Requires X11
     # ZMusic: standalone library used by gzdoom and raze source ports
@@ -1023,6 +1024,7 @@ config BR2_PACKAGE_BATOCERA_CONSOLE_SYSTEMS
 
     # Microsoft Xbox 360
 	select BR2_PACKAGE_XENIA                        if  BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY && BR2_PACKAGE_BATOCERA_WINE_SYSTEMS
+	select BR2_PACKAGE_XENIA_CANARY                 if  BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY && BR2_PACKAGE_BATOCERA_WINE_SYSTEMS
 
     # Sony PS2
 	select BR2_PACKAGE_PCSX2                        if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY
@@ -1119,7 +1121,7 @@ config BR2_PACKAGE_BATOCERA_CONSOLE_SYSTEMS
 
 	# ECWolf
 	# select BR2_PACKAGE_LIBRETRO_ECWOLF            # ALL
-	select BR2_PACKAGE_ECWOLF                       if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY
+	select BR2_PACKAGE_ECWOLF                       if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY || BR2_aarch64
 
 	# Sonic Retro Engine
 	select BR2_PACKAGE_SONIC2013                    # ALL

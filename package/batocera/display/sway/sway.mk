@@ -8,13 +8,14 @@ SWAY_VERSION = 1.7
 SWAY_SITE = $(call github,swaywm,sway,$(SWAY_VERSION))
 SWAY_LICENSE = MIT
 SWAY_LICENSE_FILES = LICENSE
-SWAY_DEPENDENCIES = wlroots cairo pango libglib2
+SWAY_DEPENDENCIES = wlroots cairo pango libglib2 grim wf-recorder
 
 SWAY_CONF_OPTS = -Ddefault-wallpaper=false \
                 -Dzsh-completions=false \
                 -Dbash-completions=false \
                 -Dfish-completions=false \
                 -Dswaybar=false \
+                -Dswaynag=false \
                 -Dtray=disabled \
                 -Dman-pages=disabled
 
@@ -33,11 +34,11 @@ define SWAY_INSTALL_TARGET_CMDS
     $(INSTALL) -D $(@D)/build/swaymsg/swaymsg   $(TARGET_DIR)/usr/bin
 
     mkdir -p $(TARGET_DIR)/etc/sway
-    $(INSTALL) -D $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/display/sway/config \
+    $(INSTALL) -D $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/display/sway/config/config \
         $(TARGET_DIR)/etc/sway
 
     mkdir -p $(TARGET_DIR)/etc/profile.d
-    $(INSTALL) -D $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/display/sway/04-sway.sh \
+    $(INSTALL) -D $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/display/sway/config/04-sway.sh \
         $(TARGET_DIR)/etc/profile.d/04-sway.sh
 endef
 
