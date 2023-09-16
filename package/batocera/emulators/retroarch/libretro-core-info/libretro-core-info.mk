@@ -3,8 +3,8 @@
 # libretro-core-info
 #
 ################################################################################
-# Version:Commits on Oct 04 2022
-LIBRETRO_CORE_INFO_VERSION = 90eff5d4e72db1b5929af7210c9b665c33034536
+# Version:Commits on Mar 11, 2023
+LIBRETRO_CORE_INFO_VERSION = v1.15.0
 LIBRETRO_CORE_INFO_SITE = $(call github,libretro,libretro-core-info,$(LIBRETRO_CORE_INFO_VERSION))
 LIBRETRO_CORE_INFO_LICENSE = GPL
 
@@ -31,10 +31,12 @@ define LIBRETRO_CORE_INFO_INSTALL_TARGET_CMDS
 	# mamevirtual_libretro.so      => no info found
 	# superflappybirds_libretro.so => no info found
 	# zc210_libretro.so            => no info found
+	# hatarib_libretro.info       => no info found
 	touch $(TARGET_DIR)/usr/share/libretro/info/emuscv_libretro.info
 	touch $(TARGET_DIR)/usr/share/libretro/info/mamevirtual_libretro.info
 	touch $(TARGET_DIR)/usr/share/libretro/info/superflappybirds_libretro.info
 	touch $(TARGET_DIR)/usr/share/libretro/info/zc210_libretro.info
+	touch $(TARGET_DIR)/usr/share/libretro/info/hatarib_libretro.info
 
 endef
 

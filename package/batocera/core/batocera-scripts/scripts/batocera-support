@@ -48,15 +48,16 @@ ps    	         	> "${DSYSTEM}/ps.txt"
 df -h 	         	> "${DSYSTEM}/df.txt"
 netstat -tuan    	> "${DSYSTEM}/netstat.txt"
 lsusb -v         	> "${DSYSTEM}/lsusb.txt" 2>/dev/null
-which tvservice >/dev/null && tvservice -m CEA 	> "${DSYSTEM}/tvservice-CEA.txt"
-which tvservice >/dev/null && tvservice -m DMT 	> "${DSYSTEM}/tvservice-DMT.txt"
+command -v tvservice >/dev/null && tvservice -m CEA 	> "${DSYSTEM}/tvservice-CEA.txt"
+command -v tvservice >/dev/null && tvservice -m DMT 	> "${DSYSTEM}/tvservice-DMT.txt"
 ifconfig -a             > "${DSYSTEM}/ifconfig.txt"
 lspci                   > "${DSYSTEM}/lspci.txt"
 lspci -v                > "${DSYSTEM}/lspci_v.txt"
+hciconfig -a            > "${DSYSTEM}/bt-capabilities.txt"
 amixer                  > "${DSYSTEM}/amixer.txt"
 aplay -l                > "${DSYSTEM}/aplay-l.txt"
-which glxinfo >/dev/null && glxinfo    > "${DSYSTEM}/glxinfo.txt"
-which xrandr  >/dev/null && xrandr     > "${DSYSTEM}/xrandr.txt"
+command -v glxinfo >/dev/null && glxinfo    > "${DSYSTEM}/glxinfo.txt"
+command -v xrandr  >/dev/null && xrandr     > "${DSYSTEM}/xrandr.txt"
 blkid                   > "${DSYSTEM}/disks.txt"
 wpctl status            > "${DSYSTEM}/wireplumber.txt"
 connmanctl technologies > "${DSYSTEM}/connman-technologies.txt"
@@ -90,6 +91,7 @@ do
     udevadm info -q all -n "${J}" > "${DJOYS}/udevadm.${N}.txt"
 done
 sdl2-jstest -l > "${DJOYS}/sdl2-jstest.txt"
+cp "/var/run/sinden/p"*"/sinden-"*".log" "${DJOYS}" 2>/dev/null
 
 # lirc
 DLIRC="${TMPDIR}/lirc"

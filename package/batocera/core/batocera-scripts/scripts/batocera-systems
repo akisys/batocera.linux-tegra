@@ -137,7 +137,7 @@ systems = {
     # https://github.com/libretro/libretro-super/blob/master/dist/info/flycast_libretro.info
     "naomi":        { "name": "Naomi", "biosFiles":       [ { "md5": "eb4099aeb42ef089cfe94f8fe95e51f6", "file": "bios/dc/naomi.zip"   } ] },
 
-    "atomiswave":   { "name": "Atomiswave", "biosFiles":  [ { "md5": "0ec5ae5b5a5c4959fa8b43fcf8687f7c", "file": "bios/dc/awbios.zip"  } ] },
+    "atomiswave":   { "name": "Atomiswave", "biosFiles":  [ { "md5": "85254fbe320ca82a768ec2c26bb08def", "file": "bios/dc/awbios.zip"  } ] },
 
     "segacd":       { "name": "Sega CD", "biosFiles":     [ { "md5": "e66fa1dc5820d254611fdcdba0662372", "file": "bios/bios_CD_E.bin"   },
                                                             { "md5": "854b9150240a198070150e4566ae1290", "file": "bios/bios_CD_U.bin"   },
@@ -176,20 +176,21 @@ systems = {
                                             { "md5": "b406d05922dac2eaf3c2e68157b1b468", "file": "bios/ROM2.BIN"      } ] },
 
     # https://www.playstation.com/en-us/support/system-updates/ps3/
-    "ps3": { "name": "PS3", "biosFiles": [  { "md5": "a0b63a3e4ae92ed176d6b9a67ce447f0", "file": "bios/PS3UPDAT.PUP" } ] },
+    "ps3": { "name": "PS3", "biosFiles": [  { "md5": "05fe32f5dc8c78acbcd84d36ee7fdc5b", "file": "bios/PS3UPDAT.PUP" } ] },
 
     # ---------- Nintendo ---------- #
     # https://docs.libretro.com/library/fceumm/#bios
     "fds":         { "name": "Nintendo Family Computer Disk System", "biosFiles": [ { "md5": "ca30b50f880eb660a320674ed365ef7a", "file": "bios/disksys.rom" } ] },
 
     # https://docs.libretro.com/library/melonds/#bios
-    "nds": { "name": "Nintendo DS", "biosFiles": [  { "md5": "94bc5094607c5e6598d50472c52f27f2", "file": "bios/firmware.bin" },
+    "nds": { "name": "Nintendo DS", "biosFiles": [  { "md5": "", "file": "bios/firmware.bin" }, # ideally - 94bc5094607c5e6598d50472c52f27f2
                                             { "md5": "df692a80a5b1bc90728bc3dfc76cd948", "file": "bios/bios7.bin" },
                                             { "md5": "a392174eb3e572fed6447e956bde4b25", "file": "bios/bios9.bin" },
                                             { "md5": "559dae4ea78eb9d67702c56c1d791e81", "file": "bios/dsi_bios7.bin" },
                                             { "md5": "87b665fce118f76251271c3732532777", "file": "bios/dsi_bios9.bin" },
-                                            { "md5": "74f23348012d7b3e1cc216c47192ffeb", "file": "bios/dsi_firmware.bin" },
-                                            { "md5": "d71edf897ddd06bf335feeb68edeb272", "file": "bios/dsi_nand.bin" }, ] },
+                                            { "md5": "", "file": "bios/dsi_firmware.bin" }, # ideally - 74f23348012d7b3e1cc216c47192ffeb
+                                            { "md5": "", "file": "bios/dsi_nand.bin" } # ideally - d71edf897ddd06bf335feeb68edeb272
+                                            ] },
 
     # https://docs.libretro.com/library/mgba/#bios
     "gba": { "name": "Nintendo Gameboy Advance", "biosFiles": [  { "md5": "a860e8c0b6d573d191e4ec7db1b1e4f6", "file": "bios/gba_bios.bin" },
@@ -264,6 +265,7 @@ systems = {
     "pc88":       { "name": "NEC PC-8800", "biosFiles": [   { "md5": "4f984e04a99d56c4cfe36115415d6eb8", "file": "bios/quasi88/N88.ROM"     },
                                                             { "md5": "793f86784e5608352a5d7f03f03e0858", "file": "bios/quasi88/N88SUB.ROM"  },
                                                             { "md5": "2ff07b8769367321128e03924af668a0", "file": "bios/quasi88/N88N.ROM"    },
+                                                            { "md5": "d81c6d5d7ad1a4bbbd6ae22a01257603", "file": "bios/quasi88/N88KNJ1.ROM"    },
                                                             { "md5": "d675a2ca186c6efcd6277b835de4c7e5", "file": "bios/quasi88/N88EXT0.ROM" },
                                                             { "md5": "e844534dfe5744b381444dbe61ef1b66", "file": "bios/quasi88/N88EXT1.ROM" },
                                                             { "md5": "6548fa45061274dee1ea8ae1e9e93910", "file": "bios/quasi88/N88EXT2.ROM" },
@@ -333,8 +335,19 @@ systems = {
     "gsplus":   { "name": "Apple 2 GS", "biosFiles":  [ { "md5": "20a0334c447cb069a040ae5be1d938df", "file": "bios/ROM1"  } ] },
 
     # ---------- Zelda Classic ---------- #
-    "zc210":   { "name": "Zelda Classic", "biosFiles":  [ { "md5": "033d7392985841027909c4c32b9f2076", "file": "bios/zcdata.dat"  },
-                                                  { "md5": "e0ba7a8634b12cfee4b6760a6f89051a", "file": "bios/zcsf.sf2" } ] },
+    "zc210":   { "name": "Zelda Classic", "biosFiles":  [ { "md5": "033d7392985841027909c4c32b9f2076", "file": "bios/zc210/zcdata.dat"  },
+                                                          { "md5": "39e5bc84ce9aac3a2d297d8aeb2a0d05", "file": "bios/zc210/sf2/default.sf2" },
+                                                          { "md5": "e0ba7a8634b12cfee4b6760a6f89051a", "file": "bios/zc210/sf2/custom0.sf2" },
+                                                          { "md5": "c1dc781c34cff8f9a023c0192754dc6c", "file": "bios/zc210/sf2/custom1.sf2" },
+                                                          { "md5": "144fcdbb6a30f1f916f6963006c2da97", "file": "bios/zc210/sf2/custom2.sf2" },
+                                                          { "md5": "134d217fb99c3be1e89cfaf8f28280d8", "file": "bios/zc210/sf2/custom3.sf2" },
+                                                          { "md5": "b37366199c6df9ee5316f031755aa821", "file": "bios/zc210/sf2/custom4.sf2" },
+                                                          { "md5": "64068b84eb88dc85b75148bbe9b393fb", "file": "bios/zc210/sf2/custom5.sf2" },
+                                                          { "md5": "1241986de5b1d00b02d34f1e6651a1d1", "file": "bios/zc210/sf2/custom6.sf2" },
+                                                          { "md5": "386db0d538f372a9f1af622d1e934abf", "file": "bios/zc210/sf2/custom7.sf2" },
+                                                          { "md5": "6f68e4baf89c8ee4623c19617319184b", "file": "bios/zc210/sf2/custom8.sf2" },
+                                                          { "md5": "2010e5b85f9e1d60685ccb3d84a17115", "file": "bios/zc210/sf2/custom9.sf2" },
+                                                          { "md5": "e0ba7a8634b12cfee4b6760a6f89051a", "file": "bios/zcsf.sf2" } ] },
     # ---------- Apple Mac ---------- #
     "macintosh":   { "name": "Apple Macintosh", "biosFiles":  [ { "md5": "66223be1497460f1e60885eeb35e03cc", "file": "bios/MacII.ROM", "emulator": "libretro", "core": "minivmac" },
                                                   { "md5": "2a8a4c7f2a38e0ab0771f59a9a0f1ee4", "file": "bios/MacIIx.ROM", "emulator": "libretro", "core": "minivmac" },
@@ -363,8 +376,8 @@ systems = {
                                                   { "md5": "c229bb677cb41b84b780c9e38a09173e", "zippedFile": "341-0813__=c=1983-90_apple__japan__910d_d.27c4096_be.ue1", "file": "bios/macclasc.zip", "emulator": "libretro", "core": "mame" },
                                                   { "md5": "", "file": "bios/mac2fdhd.zip", "emulator": "libretro", "core": "mame" },
                                                   { "md5": "2a8a4c7f2a38e0ab0771f59a9a0f1ee4", "zippedFile": "97221136.rom", "file": "bios/mac2fdhd.zip", "emulator": "libretro", "core": "mame" },
-                                                  { "md5": "", "file": "bios/nb_48gc.zip", "emulator": "libretro", "core": "mame" },
-                                                  { "md5": "1bf16eefb23a1bea02f031f1ef1de528", "zippedFile": "3410801.bin", "file": "bios/nb_48gc.zip", "emulator": "libretro", "core": "mame" },
+                                                  { "md5": "", "file": "bios/nb_mdc824.zip", "emulator": "libretro", "core": "mame" },
+                                                  { "md5": "7500a6a958247ee6e092f08715f2fff8", "zippedFile": "3410868.bin", "file": "bios/nb_mdc824.zip", "emulator": "libretro", "core": "mame" },
                                                   { "md5": "", "file": "bios/maciix.zip", "emulator": "libretro", "core": "mame" },
                                                   { "md5": "2a8a4c7f2a38e0ab0771f59a9a0f1ee4", "zippedFile": "97221136.rom", "file": "bios/maciix.zip", "emulator": "libretro", "core": "mame" },
                                                   { "md5": "", "file": "bios/maclc3.zip", "emulator": "libretro", "core": "mame" },
@@ -601,8 +614,10 @@ systems = {
                                                 { "md5": "2020aa1413ff77fe29353f3ee72dc295", "zippedFile": "341-0027-a.p5", "file": "bios/a2diskiing.zip"},
                                                 { "md5": "", "file": "bios/a2cffa02.zip" },
                                                 { "md5": "80adbc2d79f347ec63f4b771ea32984d", "zippedFile": "cffa20ee02.bin", "file": "bios/a2cffa02.zip"},
-                                                { "md5": "", "file": "bios/votrax.zip" },
-                                                { "md5": "95b91e4a2fe7d6f13d353ba1827d37f9", "zippedFile": "sc01a.bin", "file": "bios/votrax.zip"},
+                                                { "md5": "", "file": "bios/votrsc01.zip" },
+                                                { "md5": "8ccf35a06f5e9a2131b0f42380ee5c15", "zippedFile": "sc01.bin", "file": "bios/votrsc01.zip"},
+                                                { "md5": "", "file": "bios/votrsc01a.zip" },
+                                                { "md5": "95b91e4a2fe7d6f13d353ba1827d37f9", "zippedFile": "sc01a.bin", "file": "bios/votrsc01a.zip"},
                                                 { "md5": "", "file": "bios/d2fdc.zip" },
                                                 { "md5": "5f1be0c1cdff26f5956eef9643911886", "zippedFile": "341-0028-a.rom", "file": "bios/d2fdc.zip"} ] },
 
@@ -729,6 +744,58 @@ systems = {
     "vectrex":   { "name": "GCE Vectrex", "emulator": "libretro", "core": "mame", "biosFiles":  [ { "md5": "", "file": "bios/vectrex.zip"  },
                                                 { "md5": "ab082fa8c8e632dd68589a8c7741388f", "zippedFile": "exec_rom.bin", "file": "bios/vectrex.zip"},
                                                 { "md5": "a9c238473229912eb757ff3dfe6f4631", "zippedFile": "exec_rom_intl_284001-1.bin", "file": "bios/vectrex.zip"} ] },
+
+    # ---------- ScummVM ---------- #
+    "scummvm":   { "name": "ScummVM", "biosFiles":  [ { "md5": "89e42e386e82e0cacb4a2704a03706ca", "file": "bios/scummvm/extra/MT32_PCM.ROM" },
+                                                      { "md5": "5626206284b22c2734f3e9efefcd2675", "file": "bios/scummvm/extra/MT32_CONTROL.ROM" } ] },
+
+    # ---------- MSX1/MSX2 ---------- #
+    #https://github.com/openMSX/openMSX/blob/master/share/machines/Boosted_MSX2_EN.txt
+    "msx1":   { "name": "MSX1/MS2", "biosFiles":  [ { "md5": "01dd1d72ed9bb6afe8a9b441c198a1cd", "file": "bios/openmsx/nms8250_disk.rom" },
+                                                    { "md5": "ec3a01c91f24fbddcbcab0ad301bc9ef", "file": "bios/openmsx/nms8250_basic-bios2.rom" },
+                                                    { "md5": "2183c2aff17cf4297bdb496de78c2e8a", "file": "bios/openmsx/nms8250_msx2sub.rom" },
+                                                    { "md5": "6f69cc8b5ed761b03afd78000dfb0e19", "file": "bios/openmsx/fmpac.rom" },
+                                                    { "md5": "2ce20986da024e9a0e271961c6bc9f01", "file": "bios/openmsx/phc-70fd2_basickun.rom" },
+                                                    { "md5": "42af93619160ef2116416f74a6cb12f2", "file": "bios/openmsx/yrw801.rom" } ] },
+
+    # ---------- MSX LaserDisc ---------- #
+    #https://github.com/openMSX/openMSX/blob/master/share/machines/Pioneer_PX-7.xml
+    "msx1":   { "name": "MSX LaserDisc", "biosFiles":  [ { "md5": "281809cafe63437fc4bffb3033fbd0db", "file": "bios/openmsx/px-7_pbasic.rom" },
+                                                         { "md5": "9218f6dd89f7ba01e3090d44721b4260", "file": "bios/openmsx/px-7_basic-bios1.rom" } ] },
+
+    # ---------- MSX2+  ---------- #
+    #https://github.com/openMSX/openMSX/blob/master/share/machines/Boosted_MSX2+_JP.txt
+    "msx2+":   { "name": "MSX2+", "biosFiles":  [ { "md5": "acf53887c2d2783dc059a9b442c86b90", "file": "bios/openmsx/fs-a1wsx_kanjifont.rom" },
+                                                  { "md5": "c5c26c3e8bc6c485424818057f0507b9", "file": "bios/openmsx/fs-a1wsx_basic-bios2p.rom" },
+                                                  { "md5": "0c40e7db1c1fcc2405e4d0cdd215adb4", "file": "bios/openmsx/fs-a1wsx_fmbasic.rom" },
+                                                  { "md5": "7c8243c71d8f143b2531f01afa6a05dc", "file": "bios/openmsx/fs-a1wsx_msx2psub.rom" },
+                                                  { "md5": "9dfdebfaa6b547222a40aab8bb2e29f8", "file": "bios/openmsx/fs-a1wsx_kanjibasic.rom" },
+                                                  { "md5": "00aa02b6077de40a0b51d71a3c3e1d5f", "file": "bios/openmsx/fs-a1wsx_disk.rom" },
+                                                  { "md5": "fa8e7d4b999af058fe2864a5f2e014ec", "file": "bios/openmsx/fs-a1wsx_firmware.rom" },
+                                                  { "md5": "2ce20986da024e9a0e271961c6bc9f01", "file": "bios/openmsx/phc-70fd2_basickun.rom" },
+                                                  { "md5": "42af93619160ef2116416f74a6cb12f2", "file": "bios/openmsx/yrw801.rom" } ] },
+
+    # ---------- MSX-Turbo  ---------- #
+    #https://github.com/openMSX/openMSX/blob/master/share/machines/Panasonic_FS-A1GT.xml
+    "msxturbor":   { "name": "MSX-Turbo", "biosFiles":  [ { "md5": "af17a344bcc177b97a4888c4c559f3ae", "file": "bios/openmsx/fs-a1gt_firmware.rom" },
+                                                          { "md5": "acf53887c2d2783dc059a9b442c86b90", "file": "bios/openmsx/fs-a1gt_kanjifont.rom" },
+                                                          { "md5": "afa4b5f2944334f84971af814a24bd5a", "file": "bios/openmsx/ide250.zip" },
+                                                          { "md5": "2ce20986da024e9a0e271961c6bc9f01", "file": "bios/openmsx/phc-70fd2_basickun.rom" },
+                                                          { "md5": "42af93619160ef2116416f74a6cb12f2", "file": "bios/openmsx/yrw801.rom" } ] },
+    
+    # ---------- Supr'A'can  ---------- #
+    "supracan":   { "name": "Supr'A'can", "biosFiles":  [ { "md5": "", "file": "bios/supracan.zip"  },
+                                    { "md5": "53c4343e062bb3b337370bbb58e64d16", "zippedFile": "internal_68k.bin", "file": "bios/supracan.zip" } ] },
+
+    # ---------- Tandy VIS ---------- #
+    "vis":  { "name": "Tandy Video Information System", "biosFiles": [  { "md5": "", "file": "bios/vis.zip" },
+                                  { "md5": "ebf432d3b09f694db1c62018eb2ab471", "zippedFile": "p513bk0b.bin", "file": "bios/vis.zip"},
+                                  { "md5": "758f8fec271fbf526bb22b36e88f154b", "zippedFile": "p513bk1b.bin", "file": "bios/vis.zip"} ] },
+    
+    # ---------- GameCube ---------- #
+    "gamecube":   { "name": "Nintendo GameCube", "biosFiles":  [ { "md5": "db92574caab77a7ec99d4605fd6f2450", "file": "bios/GC/EUR/IPL.bin" },
+                                                                 { "md5": "b17148254a5799684c7d783206504926", "file": "bios/GC/JAP/IPL.bin" },
+                                                                 { "md5": "b17148254a5799684c7d783206504926", "file": "bios/GC/USA/IPL.bin" } ] },
 }
 
 class BiosStatus:

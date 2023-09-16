@@ -2,7 +2,7 @@
 
 GAME=$1
 
-DISPLAY=:0.0 unclutter-remote -s
+batocera-mouse show
 
 # bad hack in a first time to get audio for user batocera                                                                                                                                          
 chown -R root:audio /var/run/pulse
@@ -10,7 +10,7 @@ chmod -R g+rwX /var/run/pulse
 
 if test -z "${GAME}"
 then
-    su - batocera -c "DISPLAY=:0.0 flatpak run com.valvesoftware.Steam"
+    su - batocera -c "DISPLAY=:0.0 flatpak run com.valvesoftware.Steam -bigpicture"
 else
     su - batocera -c "DISPLAY=:0.0 flatpak run com.valvesoftware.Steam -silent ${GAME}" 2>&1 |
 	while read LINE
@@ -23,4 +23,5 @@ else
 	    fi
 	done
 fi
-DISPLAY=:0.0 unclutter-remote -h
+
+batocera-mouse hide

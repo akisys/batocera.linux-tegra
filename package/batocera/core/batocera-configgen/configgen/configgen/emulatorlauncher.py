@@ -24,6 +24,7 @@ import subprocess
 import batoceraFiles
 import utils.videoMode as videoMode
 import utils.gunsUtils as gunsUtils
+import utils.wheelsUtils as wheelsUtils
 ############################
 from utils.logger import get_logger
 eslog = get_logger(__name__)
@@ -153,6 +154,18 @@ def start_rom(args, maxnbplayers, rom, romConfiguration):
         eslog.info("guns disabled.");
         guns = []
 
+    # search wheels in case use_wheels is enabled for this game
+    # force use_wheels in case es tells it has a wheel
+    if system.isOptSet('use_wheels') == False and args.wheel:
+        system.config["use_wheels"] = True
+    if system.isOptSet('use_wheels') and system.getOptBoolean('use_wheels'):
+        deviceInfos = controllers.getDevicesInformation()
+        playersControllers = wheelsUtils.reconfigureControllers(playersControllers, system, rom, deviceInfos)
+        wheels = wheelsUtils.getWheelsFromDevicesInfos(deviceInfos)
+    else:
+        eslog.info("wheels disabled.")
+        wheels = []
+
     # find the generator
     generator = GeneratorImporter.getGenerator(system.config['emulator'])
 
@@ -240,13 +253,13 @@ def start_rom(args, maxnbplayers, rom, romConfiguration):
         # run the emulator
         try:
             from Evmapy import Evmapy
-            Evmapy.start(systemName, system.config['emulator'], effectiveCore, effectiveRomConfiguration, playersControllers)
+            Evmapy.start(systemName, system.config['emulator'], effectiveCore, effectiveRomConfiguration, playersControllers, guns)
             # change directory if wanted
             executionDirectory = generator.executionDirectory(system.config, effectiveRom)
             if executionDirectory is not None:
                 os.chdir(executionDirectory)
 
-            cmd = generator.generate(system, rom, playersControllers, guns, gameResolution)
+            cmd = generator.generate(system, rom, playersControllers, guns, wheels, gameResolution)
 
             if system.isOptSet('hud_support') and system.getOptBoolean('hud_support') == True:
                 hud_bezel = getHudBezel(system, generator, rom, gameResolution, controllers.gunsBordersSizeName(guns, system.config))
@@ -422,7 +435,7 @@ def getHudBezel(system, generator, rom, gameResolution, bordersSize):
         output_png_file = "/tmp/bezel_gunborders.png"
 
         innerSize, outerSize = bezelsUtil.gunBordersSize(bordersSize)
-        borderSize = bezelsUtil.gunBorderImage(overlay_png_file, output_png_file, innerSize, outerSize)
+        borderSize = bezelsUtil.gunBorderImage(overlay_png_file, output_png_file, innerSize, outerSize, bezelsUtil.gunsBordersColorFomConfig(system.config))
         overlay_png_file = output_png_file
 
     eslog.debug(f"applying bezel {overlay_png_file}")
@@ -573,6 +586,7 @@ if __name__ == '__main__':
     parser.add_argument("-systemname",     help="system fancy name",           type=str, required=False)
     parser.add_argument("-gameinfoxml",    help="game info xml",               type=str, nargs='?', default='/dev/null', required=False)
     parser.add_argument("-lightgun",       help="configure lightguns",         action="store_true")
+    parser.add_argument("-wheel",          help="configure wheel",             action="store_true")
 
     args = parser.parse_args()
     try:

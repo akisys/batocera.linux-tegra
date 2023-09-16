@@ -1,6 +1,8 @@
+diff --git a/hid-xpadneo/src/hid-xpadneo.c b/hid-xpadneo/src/hid-xpadneo.c
+index 0417c2c996..7f0206fa2e 100644
 --- a/hid-xpadneo/src/hid-xpadneo.c
 +++ b/hid-xpadneo/src/hid-xpadneo.c
-@@ -942,51 +942,6 @@
+@@ -919,62 +919,6 @@ static int xpadneo_event(struct hid_device *hdev, struct hid_field *field,
  			xdata->last_abs_rz = value;
  			goto combine_z_axes;
  		}
@@ -20,13 +22,20 @@
 -				xdata->profile_switched = false;
 -			} else {
 -				/* replay cached event */
--				input_report_key(idev, BTN_XBOX, 1);
--				input_sync(idev);
+-				input_report_key(gamepad, BTN_XBOX, 1);
+-				input_sync(gamepad);
 -				/* synthesize the release to remove the scan code */
--				input_report_key(idev, BTN_XBOX, 0);
--				input_sync(idev);
+-				input_report_key(gamepad, BTN_XBOX, 0);
+-				input_sync(gamepad);
 -			}
 -		}
+-		goto stop_processing;
+-	} else if ((usage->type == EV_KEY) && (usage->code == BTN_SHARE)) {
+-		/* move the Share button to the keyboard device */
+-		if (!keyboard)
+-			goto keyboard_missing;
+-		input_report_key(keyboard, BTN_SHARE, value);
+-		input_sync(keyboard);
 -		goto stop_processing;
 -	} else if (xdata->xbox_button_down && (usage->type == EV_KEY)) {
 -		if (!(xdata->quirks & XPADNEO_QUIRK_USE_HW_PROFILES)) {
@@ -46,6 +55,10 @@
 -			case BTN_Y:
 -				if (value == 1)
 -					xpadneo_switch_profile(xdata, 3, true);
+-				goto stop_processing;
+-			case BTN_SELECT:
+-				if (value == 1)
+-					xpadneo_toggle_mouse(xdata);
 -				goto stop_processing;
 -			}
 -		}

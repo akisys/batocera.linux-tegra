@@ -3,8 +3,8 @@
 # libretro-81
 #
 ################################################################################
-# Version.: Commits on Sep 11, 2022
-LIBRETRO_81_VERSION = 73f6cca62dabc84df946aea71cf457ce5ae5ea9d
+# Version.: Commits on Nov 06, 2022
+LIBRETRO_81_VERSION = 340a51b250fb8fbf1a9e5d3ad3924044250064e0
 LIBRETRO_81_SITE = $(call github,libretro,81-libretro,$(LIBRETRO_81_VERSION))
 LIBRETRO_81_LICENSE = GPLv3
 
@@ -15,9 +15,6 @@ LIBRETRO_81_PLATFORM = rpi1
 
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2836),y)
 LIBRETRO_81_PLATFORM = rpi2
-
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPIZERO2),y)
-LIBRETRO_81_PLATFORM = rpi3
 
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2837),y)
 LIBRETRO_81_PLATFORM = rpi3_64

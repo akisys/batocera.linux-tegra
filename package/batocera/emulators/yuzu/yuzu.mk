@@ -3,14 +3,14 @@
 # yuzu
 #
 ################################################################################
-# Version: Commits on Nov 15, 2022
-YUZU_VERSION = 9e27624a19a80bbefa65706c4be52f07a7ead3ac
+# Version: Commits on Sep 15, 2023
+YUZU_VERSION = aa6afb0cfedab2b73e87f882797f4d935c899f5d
 YUZU_SITE = https://github.com/yuzu-emu/yuzu.git
 YUZU_SITE_METHOD=git
 YUZU_GIT_SUBMODULES=YES
 YUZU_LICENSE = GPLv2
-YUZU_DEPENDENCIES = qt5base qt5tools qt5multimedia fmt boost ffmpeg \
-                    zstd zlib libzip lz4 catch2 sdl2 opus
+YUZU_DEPENDENCIES = qt6base qt6tools qt6multimedia fmt boost ffmpeg \
+                    zstd zlib libzip lz4 catch2 sdl2 opus json-for-modern-cpp
 
 YUZU_SUPPORTS_IN_SOURCE_BUILD = NO
 
@@ -20,12 +20,15 @@ YUZU_CONF_OPTS += -DCMAKE_BUILD_TYPE=Release
 YUZU_CONF_OPTS += -DBUILD_SHARED_LIBS=OFF
 YUZU_CONF_OPTS += -DARCHITECTURE_x86_64=ON
 YUZU_CONF_OPTS += -DENABLE_SDL2=ON
+YUZU_CONF_OPTS += -DENABLE_QT6=ON
 YUZU_CONF_OPTS += -DYUZU_USE_EXTERNAL_SDL2=OFF
 YUZU_CONF_OPTS += -DUSE_DISCORD_PRESENCE=OFF
 YUZU_CONF_OPTS += -DYUZU_TESTS=OFF
+YUZU_CONF_OPTS += -DENABLE_WEB_SERVICE=OFF
+YUZU_CONF_OPTS += -DYUZU_USE_QT_MULTIMEDIA=OFF
 
 ifeq ($(BR2_PACKAGE_VULKAN_HEADERS)$(BR2_PACKAGE_VULKAN_LOADER),yy)
-    YUZU_DEPENDENCIES += host-glslang
+    YUZU_DEPENDENCIES += host-glslang vulkan-headers vulkan-loader
 endif
 
 define YUZU_INSTALL_TARGET_CMDS

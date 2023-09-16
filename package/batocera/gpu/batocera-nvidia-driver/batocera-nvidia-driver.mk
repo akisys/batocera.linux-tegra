@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-BATOCERA_NVIDIA_DRIVER_VERSION = 515.76
+BATOCERA_NVIDIA_DRIVER_VERSION = 535.104.05
 BATOCERA_NVIDIA_DRIVER_SUFFIX = $(if $(BR2_x86_64),_64)
 BATOCERA_NVIDIA_DRIVER_SITE = http://download.nvidia.com/XFree86/Linux-x86$(BATOCERA_NVIDIA_DRIVER_SUFFIX)/$(BATOCERA_NVIDIA_DRIVER_VERSION)
 BATOCERA_NVIDIA_DRIVER_SOURCE = NVIDIA-Linux-x86$(BATOCERA_NVIDIA_DRIVER_SUFFIX)-$(BATOCERA_NVIDIA_DRIVER_VERSION).run
@@ -22,7 +22,7 @@ ifeq ($(BR2_PACKAGE_BATOCERA_NVIDIA_DRIVER_XORG),y)
 # way to do so is to make nvidia-driver depend on them.
 #batocera enable nvidia-driver and mesa3d to coexist in the same fs
 BATOCERA_NVIDIA_DRIVER_DEPENDENCIES = mesa3d xlib_libX11 xlib_libXext libglvnd \
-    batocera-nvidia-legacy-driver batocera-nvidia390-legacy-driver 
+    batocera-nvidia-legacy-driver batocera-nvidia390-legacy-driver
 #batocera-nvidia340-legacy-driver
 
 # BATOCERA_NVIDIA_DRIVER_PROVIDES = libgl libegl libgles
@@ -44,13 +44,15 @@ BATOCERA_NVIDIA_DRIVER_LIBS_GLES = \
 #batocera libnvidia-egl-wayland soname bump
 BATOCERA_NVIDIA_DRIVER_LIBS_MISC = \
 	libnvidia-eglcore.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
-	libnvidia-egl-wayland.so.1.1.9 \
+	libnvidia-egl-wayland.so.1.1.11 \
 	libnvidia-glcore.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-glsi.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-tls.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
-	libvdpau_nvidia.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-ml.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-glvkspirv.so.$(BATOCERA_NVIDIA_DRIVER_VERSION)
+
+BATOCERA_NVIDIA_DRIVER_LIBS_VDPAU = \
+	libvdpau_nvidia.so.$(BATOCERA_NVIDIA_DRIVER_VERSION)
 
 BATOCERA_NVIDIA_DRIVER_LIBS += \
 	$(BATOCERA_NVIDIA_DRIVER_LIBS_GL) \
@@ -67,7 +69,6 @@ BATOCERA_NVIDIA_DRIVER_32 = \
 	libnvidia-glcore.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-glsi.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-tls.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
-	libvdpau_nvidia.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-ml.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-glvkspirv.so.$(BATOCERA_NVIDIA_DRIVER_VERSION)
 
@@ -101,7 +102,6 @@ endif # X drivers
 ifeq ($(BR2_PACKAGE_BATOCERA_NVIDIA_DRIVER_CUDA),y)
 BATOCERA_NVIDIA_DRIVER_LIBS += \
 	libcuda.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
-	libnvidia-compiler.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvcuvid.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-fatbinaryloader.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	libnvidia-ptxjitcompiler.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
@@ -174,6 +174,19 @@ define BATOCERA_NVIDIA_DRIVER_INSTALL_LIBS
 			ln -sf $(notdir $(lib)) $(1)/usr/lib/$${baseso}; \
 		fi
 	)
+	$(foreach lib,$(BATOCERA_NVIDIA_DRIVER_LIBS_VDPAU),\
+		$(INSTALL) -D -m 0644 $(@D)/$(lib) $(1)/usr/lib/vdpau/$(notdir $(lib))
+		libsoname="$$( $(TARGET_READELF) -d "$(@D)/$(lib)" \
+			|sed -r -e '/.*\(SONAME\).*\[(.*)\]$$/!d; s//\1/;' )"; \
+		if [ -n "$${libsoname}" -a "$${libsoname}" != "$(notdir $(lib))" ]; then \
+			ln -sf $(notdir $(lib)) \
+				$(1)/usr/lib/vdpau/$${libsoname}; \
+		fi
+		baseso=$(firstword $(subst .,$(space),$(notdir $(lib)))).so; \
+		if [ -n "$${baseso}" -a "$${baseso}" != "$(notdir $(lib))" ]; then \
+			ln -sf $(notdir $(lib)) $(1)/usr/lib/vdpau/$${baseso}; \
+		fi
+	)
 endef
 
 # batocera install 32bit libraries
@@ -189,6 +202,19 @@ define BATOCERA_NVIDIA_DRIVER_INSTALL_32
 		baseso=$(firstword $(subst .,$(space),$(notdir $(lib)))).so; \
 		if [ -n "$${baseso}" -a "$${baseso}" != "$(notdir $(lib))" ]; then \
 			ln -sf $(notdir $(lib)) $(1)/lib32/$${baseso}; \
+		fi
+	)
+	$(foreach lib,$(BATOCERA_NVIDIA_DRIVER_LIBS_VDPAU),\
+		$(INSTALL) -D -m 0644 $(@D)/32/$(lib) $(1)/lib32/vdpau/$(notdir $(lib))
+		libsoname="$$( $(TARGET_READELF) -d "$(@D)/$(lib)" \
+			|sed -r -e '/.*\(SONAME\).*\[(.*)\]$$/!d; s//\1/;' )"; \
+		if [ -n "$${libsoname}" -a "$${libsoname}" != "$(notdir $(lib))" ]; then \
+			ln -sf $(notdir $(lib)) \
+				$(1)/lib32/vdpau/$${libsoname}; \
+		fi
+		baseso=$(firstword $(subst .,$(space),$(notdir $(lib)))).so; \
+		if [ -n "$${baseso}" -a "$${baseso}" != "$(notdir $(lib))" ]; then \
+			ln -sf $(notdir $(lib)) $(1)/lib32/vdpau/$${baseso}; \
 		fi
 	)
 endef
@@ -223,8 +249,10 @@ define BATOCERA_NVIDIA_DRIVER_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0644 $(@D)/10_nvidia.json \
 		$(TARGET_DIR)/usr/share/glvnd/egl_vendor.d/10_nvidia_production.json
 
+	mkdir -p $(TARGET_DIR)/usr/share/nvidia
+	mkdir -p $(TARGET_DIR)/usr/share/nvidia/X11
 	$(INSTALL) -D -m 0644 $(@D)/nvidia-drm-outputclass.conf \
-		$(TARGET_DIR)/usr/share/X11/xorg.conf.d/10-nvidia-production-drm-outputclass.conf
+		$(TARGET_DIR)/usr/share/nvidia/X11/10-nvidia-production-drm-outputclass.conf
 
 	$(INSTALL) -D -m 0644 $(@D)/libglxserver_nvidia.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	 	$(TARGET_DIR)/usr/lib/xorg/modules/extensions/libglxserver_nvidia.so.$(BATOCERA_NVIDIA_DRIVER_VERSION)
@@ -232,6 +260,10 @@ define BATOCERA_NVIDIA_DRIVER_INSTALL_TARGET_CMDS
 	 	$(TARGET_DIR)/usr/lib/xorg/modules/extensions/libglxserver_nvidia.so
 	ln -sf libglxserver_nvidia.so.$(BATOCERA_NVIDIA_DRIVER_VERSION) \
 	 	$(TARGET_DIR)/usr/lib/xorg/modules/extensions/libglxserver_nvidia.so.1
+
+# firmware
+    mkdir -p $(TARGET_DIR)/lib/firmware/nvidia/$(BATOCERA_NVIDIA_DRIVER_VERSION)
+	$(INSTALL) -D -m 0644 $(@D)/firmware/* $(TARGET_DIR)/lib/firmware/nvidia/$(BATOCERA_NVIDIA_DRIVER_VERSION)
 
 endef
 
@@ -262,13 +294,13 @@ define BATOCERA_NVIDIA_DRIVER_RENAME_KERNEL_MODULES
 	mkdir -p $(TARGET_DIR)/usr/share/nvidia
 	mkdir -p $(TARGET_DIR)/usr/share/nvidia/modules
     # rename the kernel modules to avoid conflict
-	cp $(TARGET_DIR)/lib/modules/$(KVER)/extra/nvidia.ko \
+	cp $(TARGET_DIR)/lib/modules/$(LINUX_VERSION_PROBED)/updates/nvidia.ko \
 	    $(TARGET_DIR)/usr/share/nvidia/modules/nvidia-production.ko
-	cp $(TARGET_DIR)/lib/modules/$(KVER)/extra/nvidia-modeset.ko \
+	cp $(TARGET_DIR)/lib/modules/$(LINUX_VERSION_PROBED)/updates/nvidia-modeset.ko \
 	    $(TARGET_DIR)/usr/share/nvidia/modules/nvidia-modeset-production.ko
-	cp $(TARGET_DIR)/lib/modules/$(KVER)/extra/nvidia-drm.ko \
+	cp $(TARGET_DIR)/lib/modules/$(LINUX_VERSION_PROBED)/updates/nvidia-drm.ko \
 	    $(TARGET_DIR)/usr/share/nvidia/modules/nvidia-drm-production.ko	
-	cp $(TARGET_DIR)/lib/modules/$(KVER)/extra/nvidia-uvm.ko \
+	cp $(TARGET_DIR)/lib/modules/$(LINUX_VERSION_PROBED)/updates/nvidia-uvm.ko \
 	    $(TARGET_DIR)/usr/share/nvidia/modules/nvidia-uvm-production.ko
 	# set the driver version file
 	echo $(BATOCERA_NVIDIA_DRIVER_VERSION) > $(TARGET_DIR)/usr/share/nvidia/production.version

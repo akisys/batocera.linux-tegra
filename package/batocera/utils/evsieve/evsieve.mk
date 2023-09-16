@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-EVSIEVE_VERSION = v1.3.1
+EVSIEVE_VERSION = v1.4.0
 EVSIEVE_SOURCE = foo-$(EVSIEVE_VERSION).tar.gz
 EVSIEVE_SITE = $(call github,KarsMulder,evsieve,$(EVSIEVE_VERSION))
 EVSIEVE_LICENSE = GPLv2
@@ -33,6 +33,7 @@ define EVSIEVE_INSTALL_TARGET_CMDS
  	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/utils/evsieve/evsieve-merge-devices \
  		$(TARGET_DIR)/usr/bin/evsieve-merge-devices
 	$(TARGET_STRIP) -s $(TARGET_DIR)/usr/bin/evsieve
+	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/utils/evsieve/evsieve-helper $(TARGET_DIR)/usr/bin/evsieve-helper
 endef
 
 $(eval $(generic-package))

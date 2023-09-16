@@ -8,7 +8,7 @@ from Emulator import Emulator
 import settings
 from settings.unixSettings import UnixSettings
 import json
-import socket
+import subprocess
 from utils.logger import get_logger
 from PIL import Image, ImageOps
 import utils.bezels as bezelsUtil
@@ -33,11 +33,11 @@ ratioIndexes = ["4/3", "16/9", "16/10", "16/15", "21/9", "1/1", "2/1", "3/2", "3
 systemToBluemsx = {'msx': '"MSX2"', 'msx1': '"MSX2"', 'msx2': '"MSX2"', 'colecovision': '"COL - ColecoVision"' };
 
 # Define systems compatible with retroachievements
-systemToRetroachievements = {'amstradcpc', 'atari2600', 'atari7800', 'jaguar', 'channelf', 'colecovision', 'dreamcast', 'atomiswave', 'naomi', 'nes', 'snes', 'virtualboy', 'n64', 'sg1000', 'mastersystem', 'megadrive', 'segacd', 'sega32x', 'saturn', 'pcengine', 'pcenginecd', 'supergrafx', 'psx', 'mame', 'fbneo', 'neogeo', 'lightgun', 'apple2', 'lynx', 'wswan', 'wswanc', 'gb', 'gbc', 'gba', 'sgb', 'nds', 'pokemini', 'gamegear', 'ngp', 'ngpc', 'supervision', 'sufami', 'pc88', 'pcfx', '3do', 'intellivision', 'o2em', 'vectrex', 'wonderswan', 'psp', 'snes-msu1', 'satellaview'};
+systemToRetroachievements = {'amstradcpc', 'atari2600', 'arduboy', 'atari7800', 'jaguar', 'channelf', 'colecovision', 'dreamcast', 'atomiswave', 'naomi', 'nes', 'snes', 'virtualboy', 'n64', 'sg1000', 'mastersystem', 'megadrive', 'megaduck', 'segacd', 'sega32x', 'saturn', 'pcengine', 'pcenginecd', 'supergrafx', 'psx', 'mame', 'fbneo', 'neogeo', 'lightgun', 'apple2', 'lynx', 'wswan', 'wswanc', 'gb', 'gbc', 'gba', 'sgb', 'nds', 'pokemini', 'gamegear', 'ngp', 'ngpc', 'supervision', 'sufami', 'pc88', 'pcfx', '3do', 'intellivision', 'o2em', 'vectrex', 'wonderswan', 'psp', 'snes-msu1', 'satellaview', 'wasm4'};
 
 # Define Retroarch Core compatible with retroachievements
 # List taken from https://docs.libretro.com/guides/retroachievements/#cores-compatibility
-coreToRetroachievements = {'beetle-saturn', 'blastem', 'bluemsx', 'bsnes', 'bsnes_hd', 'cap32', 'desmume', 'duckstation', 'fbneo', 'fceumm', 'flycast', 'freechaf', 'freeintv', 'gambatte', 'genesisplusgx', 'genesisplusgx-wide', 'handy', 'kronos', 'mednafen_lynx', 'mednafen_ngp', 'mednafen_psx', 'mednafen_supergrafx', 'mednafen_wswan', 'melonds', 'mesen', 'mesens', 'mgba', 'mupen64plus-next', 'o2em', 'opera', 'parallel_n64', 'pce', 'pce_fast', 'pcfx', 'pcsx_rearmed', 'picodrive', 'pokemini', 'potator', 'ppsspp', 'prosystem', 'quasi88', 'snes9x', 'snes9x_next', 'stella', 'stella2014', 'swanstation', 'vb', 'vba-m', 'vecx', 'virtualjaguar'}
+coreToRetroachievements = {'beetle-saturn', 'blastem', 'bluemsx', 'bsnes', 'bsnes_hd', 'cap32', 'desmume', 'duckstation', 'fbneo', 'fceumm', 'flycast', 'flycastvl', 'freechaf', 'freeintv', 'gambatte', 'genesisplusgx', 'genesisplusgx-wide', 'handy', 'kronos', 'mednafen_lynx', 'mednafen_ngp', 'mednafen_psx', 'mednafen_supergrafx', 'mednafen_wswan', 'melonds', 'mesen', 'mesens', 'mgba', 'mupen64plus-next', 'o2em', 'opera', 'parallel_n64', 'pce', 'pce_fast', 'pcfx', 'pcsx_rearmed', 'picodrive', 'pokemini', 'potator', 'ppsspp', 'prosystem', 'quasi88', 'snes9x', 'snes9x_next', 'stella', 'stella2014', 'swanstation', 'vb', 'vba-m', 'vecx', 'virtualjaguar'}
 
 # Define systems NOT compatible with rewind option
 systemNoRewind = {'sega32x', 'psx', 'zxspectrum', 'n64', 'dreamcast', 'atomiswave', 'naomi', 'saturn'};
@@ -51,8 +51,8 @@ coreToP1Device = {'atari800': '513', 'cap32': '513', '81': '259', 'fuse': '769'}
 coreToP2Device = {'atari800': '513', 'fuse': '513'};
 
 # Define the libretro device type corresponding to the libretro SYSTEM (when needed)
-systemToP1Device = {'msx': '257', 'msx1': '257', 'msx2': '257', 'colecovision': '1' };
-systemToP2Device = {'msx': '257', 'msx1': '257', 'msx2': '257', 'colecovision': '1' };
+systemToP1Device = {'msx': '1', 'msx1': '1', 'msx2': '1', 'colecovision': '1' };
+systemToP2Device = {'msx': '1', 'msx1': '1', 'msx2': '1', 'colecovision': '1' };
 
 # Netplay modes
 systemNetplayModes = {'host', 'client', 'spectator'}
@@ -60,15 +60,16 @@ systemNetplayModes = {'host', 'client', 'spectator'}
 # Cores that require .slang shaders (even on OpenGL, not only Vulkan)
 coreForceSlangShaders = { 'mupen64plus-next' }
 
-def connected_to_internet(host="batocera.org", timeout=1):
-    try:
-        socket.setdefaulttimeout(timeout)
-        sock = socket.create_connection((host, 443), timeout) # Nobody uses http only, right?
-        sock.close()
+def connected_to_internet():
+    # same call as in es
+    cmd = ["timeout", "1", "ping", "-c", "1", "-t", "255", "8.8.8.8"]
+    process = subprocess.Popen(cmd)
+    process.wait()
+    if process.returncode == 0:
+        eslog.error(f"Connected to the internet")
         return True
-    except Exception as e:
-        eslog.error(f"Not connected to the internet: {host} responded with '{e}'")
-        return False
+    eslog.error(f"Not connected to the internet")
+    return False
 
 def writeLibretroConfig(generator, retroconfig, system, controllers, guns, rom, bezel, shaderBezel, gameResolution, gfxBackend):
     writeLibretroConfigToFile(retroconfig, createLibretroConfig(generator, system, controllers, guns, rom, bezel, shaderBezel, gameResolution, gfxBackend))
@@ -118,7 +119,7 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
     if (system.isOptSet("audio_volume")):
         retroarchConfig['audio_volume'] = system.config['audio_volume']
 
-    if (system.isOptSet("display.rotate") and videoMode.getDisplayMode() not in ['xorg', 'wayland']):
+    if system.isOptSet("display.rotate") and not videoMode.supportSystemRotation(): # only for systems that don't support global rotation (xorg, wayland, ...)
         # 0 => 0 ; 1 => 270; 2 => 180 ; 3 => 90
         if system.config["display.rotate"] == "0":
             retroarchConfig['video_rotation'] = "0"
@@ -256,15 +257,15 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
 
     ## PlayStation controller
     if (system.config['core'] == 'mednafen_psx'):               # Madnafen
-        if system.isOptSet('beetle_psx_Controller1'):
-            retroarchConfig['input_libretro_device_p1'] = system.config['beetle_psx_Controller1']
-            if system.config['beetle_psx_Controller1'] != '1':
+        if system.isOptSet('beetle_psx_hw_Controller1'):
+            retroarchConfig['input_libretro_device_p1'] = system.config['beetle_psx_hw_Controller1']
+            if system.config['beetle_psx_hw_Controller1'] != '1':
                 retroarchConfig['input_player1_analog_dpad_mode'] = '0'
             else:
                 retroarchConfig['input_player1_analog_dpad_mode'] = '1'
-        if system.isOptSet('beetle_psx_Controller2'):
-            retroarchConfig['input_libretro_device_p2'] = system.config['beetle_psx_Controller2']
-            if system.config['beetle_psx_Controller2'] != '1':
+        if system.isOptSet('beetle_psx_hw_Controller2'):
+            retroarchConfig['input_libretro_device_p2'] = system.config['beetle_psx_hw_Controller2']
+            if system.config['beetle_psx_hw_Controller2'] != '1':
                 retroarchConfig['input_player2_analog_dpad_mode'] = '0'
             else:
                 retroarchConfig['input_player2_analog_dpad_mode'] = '1'
@@ -379,31 +380,26 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
             else:
                 retroarchConfig['input_player2_analog_dpad_mode'] = '3'
 
-    ## PS1 Swanstation and Duckstation
-    if (system.config['core'] == 'swanstation'):               # Swanstation
-        # Controller 1 Type
-        if system.isOptSet('duckstation_Controller1'):
-            coreSettings.save('duckstation_Controller1.Type', system.config['duckstation_Controller1'])
-        else:
-            coreSettings.save('duckstation_Controller1.Type', '"DigitalController"')
-        # Controller 2 Type
-        if system.isOptSet('duckstation_Controller2'):
-            coreSettings.save('duckstation_Controller2.Type', system.config['duckstation_Controller2'])
-        else:
-            coreSettings.save('duckstation_Controller2.Type', '"DigitalController"')
-    if (system.config['core'] == 'duckstation'):               # Duckstation
-        if system.isOptSet('duckstation_Controller1'):
-            retroarchConfig['input_libretro_device_p1'] = system.config['duckstation_Controller1']
-            if system.config['duckstation_Controller1'] != '1':
+    ## PS1 Swanstation
+    if (system.config['core'] == 'swanstation'):
+        if system.isOptSet('swanstation_Controller1'):
+            retroarchConfig['input_libretro_device_p1'] = system.config['swanstation_Controller1']
+            if system.config['swanstation_Controller1'] != '261' and system.config['swanstation_Controller1'] != '517':
                 retroarchConfig['input_player1_analog_dpad_mode'] = '0'
             else:
-                retroarchConfig['input_player1_analog_dpad_mode'] = '3'
-        if system.isOptSet('duckstation_Controller2'):
-            retroarchConfig['input_libretro_device_p2'] = system.config['duckstation_Controller2']
-            if system.config['duckstation_Controller2'] != '1':
+                retroarchConfig['input_player1_analog_dpad_mode'] = '1'
+        else:
+            retroarchConfig['input_libretro_device_p1'] = '1'
+            retroarchConfig['input_player1_analog_dpad_mode'] = '0'
+        if system.isOptSet('swanstation_Controller2'):
+            retroarchConfig['input_libretro_device_p2'] = system.config['swanstation_Controller2']
+            if system.config['swanstation_Controller2'] != '261' and system.config['swanstation_Controller2'] != '517':
                 retroarchConfig['input_player2_analog_dpad_mode'] = '0'
             else:
-                retroarchConfig['input_player2_analog_dpad_mode'] = '3'
+                retroarchConfig['input_player2_analog_dpad_mode'] = '1'
+        else:
+            retroarchConfig['input_libretro_device_p2'] = '1'
+            retroarchConfig['input_player2_analog_dpad_mode'] = '0'
 
     ## Wonder Swan & Wonder Swan Color
     if (system.config['core'] == "mednafen_wswan"):             # Beetle Wonderswan
@@ -419,6 +415,29 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
             wswanOrientation = system.config['wswan_rotate_display']
         retroarchConfig['wswan_rotate_display'] = wswanOrientation
 
+    ## N64 Controller Remap
+    def update_controller_config(controller_number, option):
+        # Remaps for N64 style controllers
+        remap_values = {
+            'btn_a': '1', 'btn_b': '0', 'btn_x': '23', 'btn_y': '21', 
+            'btn_l2': '22', 'btn_r2': '20', 'btn_select': '12',             
+        }
+            
+        for btn, value in remap_values.items():
+            retroarchConfig[f'input_player{controller_number}_{btn}'] = value
+            
+            
+    if system.config['core'] == 'mupen64plus-next':
+        option = 'mupen64plus-controller'
+    elif system.config['core'] == 'parallel_n64':
+        option = 'parallel-n64-controller'
+    else:
+        option = None
+        
+    for i in range(1, 5):
+        if option and system.isOptSet(f'{option}{i}') and system.config[f'{option}{i}'] != 'retropad':
+            update_controller_config(i, option)
+                      
     ## PORTS
     ## Quake
     if (system.config['core'] == 'tyrquake'):
@@ -553,6 +572,7 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
             retroarchConfig['cheevos_enable'] = 'true'
             retroarchConfig['cheevos_username'] = systemConfig.get('retroachievements.username', "")
             retroarchConfig['cheevos_password'] = systemConfig.get('retroachievements.password', "")
+            retroarchConfig['cheevos_cmd'] = "/usr/share/batocera/configgen/call_achievements_hooks.sh"
             retroarchConfig['cheevos_token'] = "" # clear the token, otherwise, it may fail (possibly a ra bug)
             # retroachievements_hardcore_mode
             if system.isOptSet('retroachievements.hardcore') and system.getOptBoolean('retroachievements.hardcore') == True:
@@ -589,7 +609,7 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
                 retroarchConfig['cheevos_richpresence_enable'] = 'true'
             else:
                 retroarchConfig['cheevos_richpresence_enable'] = 'false'
-            if not connected_to_internet(host="retroachievements.org", timeout=1):
+            if not connected_to_internet():
                 retroarchConfig['cheevos_enable'] = 'false'
     else:
         retroarchConfig['cheevos_enable'] = 'false'
@@ -675,6 +695,12 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
     # force the assets directory while it was wrong in some beta versions
     retroarchConfig['assets_directory'] = '/usr/share/libretro/assets'
 
+    # Adaptation for small resolution (GPICase)
+    if isLowResolution(gameResolution):
+        retroarchConfig['menu_enable_widgets'] = 'false'
+        retroarchConfig['video_msg_bgcolor_enable'] = 'true'
+        retroarchConfig['video_font_size'] = '11'
+
     # AI option (service for game translations)
     if system.isOptSet('ai_service_enabled') and system.getOptBoolean('ai_service_enabled') == True:
         retroarchConfig['ai_service_enable'] = 'true'
@@ -721,9 +747,11 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
                             "segacd" : { "device": 516, "p2": 0,
                                          "gameDependant": [ { "key": "gun", "value": "justifier", "mapkey": "device", "mapvalue": "772" } ]} },
         "fbneo"         : { "default" : { "device":   4, "p1": 0, "p2": 1 } },
+        "mame"          : { "default" : { "p1": 0, "p2": 1 } },
         "mame078plus"   : { "default" : { "device":   4, "p1": 0, "p2": 1 } },
         "mame0139"      : { "default" : { "device":   4, "p1": 0, "p2": 1 } },
         "flycast"       : { "default" : { "device":   4, "p1": 0, "p2": 1 } },
+        "flycastvl"     : { "default" : { "device":   4, "p1": 0, "p2": 1 } },
         "mednafen_psx"  : { "default" : { "device": 260, "p1": 0, "p2": 1 } },
         "pcsx_rearmed"  : { "default" : { "device": 260, "p1": 0, "p2": 1 } },
         "swanstation"   : { "default" : { "device": 260, "p1": 0, "p2": 1 } },
@@ -757,8 +785,11 @@ def createLibretroConfig(generator, system, controllers, guns, rom, bezel, shade
                     if "device_p"+str(nplayer) in ragunconf:
                         retroarchConfig['input_libretro_device_p'+str(nplayer)] = ragunconf["device_p"+str(nplayer)]
                     else:
-                        retroarchConfig['input_libretro_device_p'+str(nplayer)] = ragunconf["device"]
-                    configureGunInputsForPlayer(nplayer, guns[ragunconf["p"+str(nplayer)]], controllers, retroarchConfig)
+                        if "device" in ragunconf:
+                            retroarchConfig['input_libretro_device_p'+str(nplayer)] = ragunconf["device"]
+                        else:
+                            retroarchConfig['input_libretro_device_p'+str(nplayer)] = ""
+                    configureGunInputsForPlayer(nplayer, guns[ragunconf["p"+str(nplayer)]], controllers, retroarchConfig, system.config['core'])
 
             # override core settings
             for key in raguncoreconf:
@@ -789,7 +820,7 @@ def clearGunInputsForPlayer(n, retroarchConfig):
         for type in ["btn", "mbtn"]:
             retroarchConfig['input_player{}_{}_{}'.format(n, key, type)] = ''
 
-def configureGunInputsForPlayer(n, gun, controllers, retroarchConfig):
+def configureGunInputsForPlayer(n, gun, controllers, retroarchConfig, core):
     # gun mapping
     retroarchConfig['input_player{}_mouse_index'            .format(n)] = gun["id_mouse"]
     retroarchConfig['input_player{}_gun_trigger_mbtn'       .format(n)] = 1
@@ -804,6 +835,54 @@ def configureGunInputsForPlayer(n, gun, controllers, retroarchConfig):
     retroarchConfig['input_player{}_gun_dpad_down_mbtn'     .format(n)] = 9
     retroarchConfig['input_player{}_gun_dpad_left_mbtn'     .format(n)] = 10
     retroarchConfig['input_player{}_gun_dpad_right_mbtn'    .format(n)] = 11
+
+    # custom mapping by core to match more with avaible gun batocera buttons
+    # different mapping for ps1 which has only 3 buttons and maps on aux_a and aux_b not available on all guns
+    if core == "pcsx_rearmed":
+        retroarchConfig['input_player{}_gun_offscreen_shot_mbtn'.format(n)] = ''
+        retroarchConfig['input_player{}_gun_start_mbtn'         .format(n)] = ''
+        retroarchConfig['input_player{}_gun_aux_a_mbtn'         .format(n)] = 2
+        retroarchConfig['input_player{}_gun_aux_b_mbtn'         .format(n)] = 3
+
+    if core == "fbneo":
+        retroarchConfig['input_player{}_gun_offscreen_shot_mbtn'.format(n)] = ''
+        retroarchConfig['input_player{}_gun_aux_a_mbtn'         .format(n)] = 2
+
+    if core == "snes9x":
+        retroarchConfig['input_player{}_gun_offscreen_shot_mbtn'.format(n)] = ''
+        retroarchConfig['input_player{}_gun_start_mbtn'         .format(n)] = ''
+        retroarchConfig['input_player{}_gun_select_mbtn'        .format(n)] = ''
+        retroarchConfig['input_player{}_gun_aux_a_mbtn'         .format(n)] = 2
+        retroarchConfig['input_player{}_gun_aux_b_mbtn'         .format(n)] = 3
+        retroarchConfig['input_player{}_gun_start_mbtn'         .format(n)] = 4
+
+    if core == "genesisplusgx":
+        retroarchConfig['input_player{}_gun_offscreen_shot_mbtn'.format(n)] = ''
+        retroarchConfig['input_player{}_gun_start_mbtn'         .format(n)] = ''
+        retroarchConfig['input_player{}_gun_select_mbtn'        .format(n)] = ''
+        retroarchConfig['input_player{}_gun_aux_a_mbtn'         .format(n)] = 2
+        retroarchConfig['input_player{}_gun_aux_b_mbtn'         .format(n)] = 3
+        retroarchConfig['input_player{}_gun_start_mbtn'         .format(n)] = 4
+
+    if core == "flycast":
+        retroarchConfig['input_player{}_gun_offscreen_shot_mbtn'.format(n)] = ''
+        retroarchConfig['input_player{}_gun_aux_a_mbtn'         .format(n)] = 2
+
+    if core == "mame078plus":
+        retroarchConfig['input_player{}_gun_offscreen_shot_mbtn'.format(n)] = ''
+        retroarchConfig['input_player{}_gun_start_mbtn'         .format(n)] = ''
+        retroarchConfig['input_player{}_gun_select_mbtn'        .format(n)] = ''
+        retroarchConfig['input_player{}_gun_aux_a_mbtn'         .format(n)] = ''
+        retroarchConfig['input_player{}_gun_aux_b_mbtn'         .format(n)] = ''
+        retroarchConfig['input_player{}_gun_start_mbtn'         .format(n)] = 3
+        retroarchConfig['input_player{}_gun_select_mbtn'        .format(n)] = 4
+
+    if core == "swanstation":
+        retroarchConfig['input_player{}_gun_offscreen_shot_mbtn'.format(n)] = ''
+        retroarchConfig['input_player{}_gun_start_mbtn'         .format(n)] = ''
+        retroarchConfig['input_player{}_gun_aux_a_mbtn'         .format(n)] = 2
+        retroarchConfig['input_player{}_gun_aux_b_mbtn'         .format(n)] = 3
+
 
     # mapping
     mapping = {
@@ -858,6 +937,8 @@ def writeBezelConfig(generator, bezel, shaderBezel, retroarchConfig, rom, gameRe
     if bezel == "none" or bezel == "":
         bezel = None
 
+    eslog.debug("libretro bezel: {}".format(bezel))
+
     # create a fake bezel if guns need it
     if bezel is None and gunsBordersSize is not None:
         eslog.debug("guns need border")
@@ -909,11 +990,11 @@ def writeBezelConfig(generator, bezel, shaderBezel, retroarchConfig, rom, gameRe
     if "width" not in infos or "height" not in infos or "top" not in infos or "left" not in infos or "bottom" not in infos or "right" not in infos or shaderBezel:
         viewPortUsed = False
 
-    gameRatio  = float(gameResolution["width"]) / float(gameResolution["height"])
+    gameRatio = float(gameResolution["width"]) / float(gameResolution["height"])
 
     if viewPortUsed:
         if gameResolution["width"] != infos["width"] or gameResolution["height"] != infos["height"]:
-            if gameRatio < 1.6: # let's use bezels only for 16:10, 5:3, 16:9 and wider aspect ratios
+            if gameRatio < 1.6 and gunsBordersSize is None: # let's use bezels only for 16:10, 5:3, 16:9 and wider aspect ratios ; don't skip if gun borders are needed
                 return
             else:
                 bezelNeedAdaptation = True
@@ -925,7 +1006,7 @@ def writeBezelConfig(generator, bezel, shaderBezel, retroarchConfig, rom, gameRe
 
     else:
         # when there is no information about width and height in the .info, assume that the tv is HD 16/9 and infos are core provided
-        if gameRatio < 1.6: # let's use bezels only for 16:10, 5:3, 16:9 and wider aspect ratios
+        if gameRatio < 1.6 and gunsBordersSize is None: # let's use bezels only for 16:10, 5:3, 16:9 and wider aspect ratios ; don't skip if gun borders are needed
             return
         else:
             # No info on the bezel, let's get the bezel image width and height and apply the
@@ -975,7 +1056,7 @@ def writeBezelConfig(generator, bezel, shaderBezel, retroarchConfig, rom, gameRe
         wratio = gameResolution["width"] / float(infos["width"])
         hratio = gameResolution["height"] / float(infos["height"])
 
-        # If width or height < original, can't add black borders, need to stretch
+        # Stretch also takes care of cutting off the bezel and adapting viewport, if aspect ratio is < 16:9
         if gameResolution["width"] < infos["width"] or gameResolution["height"] < infos["height"]:
             eslog.debug("Screen resolution smaller than bezel: forcing stretch")
             bezel_stretch = True
@@ -1012,9 +1093,16 @@ def writeBezelConfig(generator, bezel, shaderBezel, retroarchConfig, rom, gameRe
                             pass
 
         if bezel_stretch:
-            retroarchConfig['custom_viewport_x']      = infos["left"] * wratio
+            borderx = 0
+            viewportRatio = (float(infos["width"])/float(infos["height"]))
+            if (viewportRatio - gameRatio > 0.01):
+                new_x = int(infos["width"]*gameRatio/viewportRatio)
+                delta = int(infos["width"]-new_x)
+                borderx = delta//2
+            eslog.debug(f"Bezel_stretch: need to cut off {borderx} pixels")
+            retroarchConfig['custom_viewport_x']      = (infos["left"] - borderx/2) * wratio
             retroarchConfig['custom_viewport_y']      = infos["top"] * hratio
-            retroarchConfig['custom_viewport_width']  = (infos["width"]  - infos["left"] - infos["right"])  * wratio
+            retroarchConfig['custom_viewport_width']  = (infos["width"]  - infos["left"] - infos["right"] + borderx)  * wratio
             retroarchConfig['custom_viewport_height'] = (infos["height"] - infos["top"]  - infos["bottom"]) * hratio
             retroarchConfig['video_message_pos_x']    = infos["messagex"] * wratio
             retroarchConfig['video_message_pos_y']    = infos["messagey"] * hratio
@@ -1057,7 +1145,7 @@ def writeBezelConfig(generator, bezel, shaderBezel, retroarchConfig, rom, gameRe
         eslog.debug("Draw gun borders")
         output_png_file = "/tmp/bezel_gunborders.png"
         innerSize, outerSize = bezelsUtil.gunBordersSize(gunsBordersSize)
-        borderSize = bezelsUtil.gunBorderImage(overlay_png_file, output_png_file, innerSize, outerSize)
+        borderSize = bezelsUtil.gunBorderImage(overlay_png_file, output_png_file, innerSize, outerSize, bezelsUtil.gunsBordersColorFomConfig(system.config))
         overlay_png_file = output_png_file
 
     eslog.debug(f"Bezel file set to {overlay_png_file}")
@@ -1082,6 +1170,9 @@ def writeBezelConfig(generator, bezel, shaderBezel, retroarchConfig, rom, gameRe
         # Shaders should use this path to find the art.
         os.symlink(overlay_png_file, shaderBezelFile)
         eslog.debug("Symlinked bezel file {} to {} for selected shader".format(overlay_png_file, shaderBezelFile))
+
+def isLowResolution(gameResolution):
+    return gameResolution["width"] < 480 or gameResolution["height"] < 480
 
 def writeBezelCfgConfig(cfgFile, overlay_png_file):
     fd = open(cfgFile, "w")

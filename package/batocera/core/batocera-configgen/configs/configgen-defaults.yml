@@ -57,6 +57,8 @@ apple2gs:
 arcadia:
   emulator: libretro
   core:     mame
+  options:
+    sharemameart: 0
 archimedes:
   emulator: libretro
   core:     mame
@@ -90,6 +92,9 @@ atomiswave:
 bbc:
   emulator: libretro
   core:     mame
+boom3:
+  emulator: libretro
+  core:     boom3
 c64:
   emulator: libretro
   core:     vice_x64
@@ -174,13 +179,11 @@ flash:
   emulator: ruffle
   core:     ruffle
   options:
-    forceNoBezel: true
     hud_support: false
 flatpak:
   emulator: flatpak
   core:     flatpak
   options:
-    forceNoBezel: true
     hud_support: false
 fm7:
   emulator: libretro
@@ -244,9 +247,19 @@ gx4000:
 gzdoom:
   emulator: gzdoom
   core:     gzdoom
+hcl:
+  emulator: hcl
+  core:     hcl
+  options:
+    bezel: none
 hikaru:
   emulator: demul
   core:     demul
+hurrican:
+  emulator: hurrican
+  core:     hurrican
+  options:
+    bezel: none
 ikemen:
   emulator: ikemen
   core:     ikemen
@@ -255,6 +268,9 @@ ikemen:
 intellivision:
   emulator: libretro
   core:     freeintv
+quake3:
+  emulator: ioquake3
+  core:     ioquake3
 jaguar:
   emulator: libretro
   core:     virtualjaguar
@@ -267,7 +283,7 @@ laser310:
   core:     mame
 lcdgames:
   emulator: libretro
-  core:     gw
+  core:     mame
   options:
     forceNoBezel: true
 lowresnx:
@@ -296,12 +312,11 @@ megadrive:
   core:     genesisplusgx
 megaduck:
   emulator: libretro
-  core:     mame
+  core:     sameduck
 model2:
   emulator: model2emu
   core:     model2emu
   options:
-    forceNoBezel: true
     hud_support: false
 model3:
   emulator: supermodel
@@ -309,6 +324,9 @@ model3:
 moonlight:
   emulator: moonlight
   core:     moonlight
+  options:
+    bezel: none
+    hud_support: false
 mrboom:
   emulator: libretro
   core:     mrboom
@@ -333,12 +351,18 @@ mugen:
 fpinball:
   emulator: fpinball
   core:     fpinball
+multivision:
+  emulator: libretro
+  core:     gearsystem
 n64:
   emulator: mupen64plus
   core:     glide64mk2
 n64dd:
   emulator: mupen64plus
   core:     glide64mk2
+namco2x6:
+  emulator: play
+  core:     play
 naomi:
   emulator: libretro
   core:     flycast
@@ -357,6 +381,9 @@ neogeocd:
 nes:
   emulator: libretro
   core:     fceumm
+ngage:
+  emulator: eka2l1
+  core:     eka2l1
 ngp:
   emulator: libretro
   core:     mednafen_ngp
@@ -377,6 +404,14 @@ openbor:
   options:
     # none because some games fails by default with textures (street of rage 2x)
     bezel: none
+openjazz:
+  emulator: openjazz
+  core:     openjazz
+openlara:
+  emulator: libretro
+  core:     openlara
+  options:
+    gfxbackend: gl
 
 # P-S
 
@@ -401,9 +436,12 @@ pdp1:
 pet:
   emulator: vice
   core:     xpet
+pico:
+  emulator: libretro
+  core:     genesisplusgx
 pico8:
   emulator: libretro
-  core:     retro8
+  core:     fake08
 plugnplay:
   emulator: libretro
   core:     mame
@@ -441,6 +479,9 @@ pv1000:
 pygame:
   emulator: pygame
   core:     pygame
+pyxel:
+  emulator: pyxel
+  core:     pyxel
 raze:
   emulator: raze
   core:     raze
@@ -488,6 +529,9 @@ solarus:
 sonicretro:
   emulator: sonic2013
   core:     sonic2013
+spectravideo:
+  emulator: openmsx
+  core:     openmsx
 steam:
   emulator: steam
   core:     steam
@@ -516,11 +560,15 @@ switch:
   emulator: yuzu
   core:     yuzu
   options:
-    forceNoBezel: true
     hud_support: false
 
 # T-Z
 
+thextech:
+  emulator: thextech
+  core:     thextech
+  options:
+    bezel: none
 thomson:
   emulator: libretro
   core:     theodore
@@ -536,6 +584,11 @@ triforce:
 tutor:
   emulator: libretro
   core:     mame
+tyrian:
+  emulator: tyrian
+  core:     tyrian
+  options:
+    bezel: none
 tyrquake:
   emulator: libretro
   core:     tyrquake
@@ -557,9 +610,14 @@ videopacplus:
 virtualboy:
   emulator: libretro
   core:     vb
+vis:
+  emulator: libretro
+  core:     mame
 vitaquake2:
   emulator: libretro
   core:     vitaquake2
+  options:
+    gfxbackend: glcore
 vsmile:
   emulator: libretro
   core:     mame
@@ -576,13 +634,11 @@ windows:
   emulator: wine
   core:     proton
   options:
-    forceNoBezel: true
     hud_support: false
 windows_installers:
   emulator: wine
   core:     proton
   options:
-    forceNoBezel: true
     hud_support: false
 wswan:
   emulator: libretro
@@ -600,7 +656,6 @@ xash3d_fwgs:
   emulator: xash3d_fwgs
   core:     xash3d_fwgs
   options:
-    forceNoBezel: true
     hud_support: false
 xegs:
   emulator: libretro
@@ -615,7 +670,6 @@ xbox360:
   emulator: xenia
   core:     xenia
   options:
-    forceNoBezel: true
     hud_support: false
 zc210:
   emulator: libretro
@@ -626,3 +680,6 @@ zx81:
 zxspectrum:
   emulator: libretro
   core:     fuse
+vpinball:
+  emulator: vpinball
+  core:     vpinball

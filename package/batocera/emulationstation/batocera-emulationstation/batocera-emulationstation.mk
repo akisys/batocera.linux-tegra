@@ -1,16 +1,16 @@
 ################################################################################
 #
-# Batocera EmulationStation
+# batocera-emulationstation
 #
 ################################################################################
-# Last update: Nov 9, 2022
-BATOCERA_EMULATIONSTATION_VERSION = 3845cd225794d5547e741282409e5c80f84d7e28
+# Last update: Commits on Sept 15, 2023
+BATOCERA_EMULATIONSTATION_VERSION = 1a2ef2e004c889d6af66a9057ec2ea2e41bdaa98
 BATOCERA_EMULATIONSTATION_SITE = https://github.com/batocera-linux/batocera-emulationstation
 BATOCERA_EMULATIONSTATION_SITE_METHOD = git
 BATOCERA_EMULATIONSTATION_LICENSE = MIT
 BATOCERA_EMULATIONSTATION_GIT_SUBMODULES = YES
 BATOCERA_EMULATIONSTATION_LICENSE = MIT, Apache-2.0
-BATOCERA_EMULATIONSTATION_DEPENDENCIES = sdl2 sdl2_mixer libfreeimage freetype alsa-lib libcurl vlc rapidjson pulseaudio-utils batocera-es-system host-gettext
+BATOCERA_EMULATIONSTATION_DEPENDENCIES = sdl2 sdl2_mixer libfreeimage freetype alsa-lib libcurl vlc rapidjson pulseaudio batocera-es-system host-gettext
 # install in staging for debugging (gdb)
 BATOCERA_EMULATIONSTATION_INSTALL_STAGING = YES
 # BATOCERA_EMULATIONSTATION_OVERRIDE_SRCDIR = /sources/batocera-emulationstation
@@ -26,10 +26,6 @@ ifeq ($(BR2_PACKAGE_HAS_LIBGLES),y)
 BATOCERA_EMULATIONSTATION_CONF_OPTS += -DGLES2=ON
 endif
 
-ifeq ($(BR2_PACKAGE_HAS_LIBEGL),y)
-BATOCERA_EMULATIONSTATION_CONF_OPTS += -DEGL=ON
-endif
-
 ifeq ($(BR2_PACKAGE_RPI_USERLAND),y)
 BATOCERA_EMULATIONSTATION_CONF_OPTS += -DBCM=ON -DRPI=ON
 endif
@@ -39,7 +35,7 @@ BATOCERA_EMULATIONSTATION_CONF_OPTS += -DENABLE_TTS=ON
 BATOCERA_EMULATIONSTATION_DEPENDENCIES += espeak
 endif
 
-ifeq ($(BR2_PACKAGE_KODI),y)
+ifeq ($(BR2_PACKAGE_KODI)$(BR2_PACKAGE_KODI20),y)
 BATOCERA_EMULATIONSTATION_CONF_OPTS += -DDISABLE_KODI=OFF
 else
 BATOCERA_EMULATIONSTATION_CONF_OPTS += -DDISABLE_KODI=ON
@@ -51,7 +47,7 @@ else
 BATOCERA_EMULATIONSTATION_CONF_OPTS += -DENABLE_PULSE=OFF
 endif
 
-ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER),y)
+ifeq ($(BR2_PACKAGE_XORG7),y)
 BATOCERA_EMULATIONSTATION_CONF_OPTS += -DENABLE_FILEMANAGER=ON
 else
 BATOCERA_EMULATIONSTATION_CONF_OPTS += -DENABLE_FILEMANAGER=OFF
@@ -83,7 +79,7 @@ define BATOCERA_EMULATIONSTATION_RPI_FIXUP
 endef
 
 define BATOCERA_EMULATIONSTATION_EXTERNAL_POS
-	cp $(STAGING_DIR)/usr/share/batocera-es-system/es_external_translations.h $(@D)/es-app/src
+	cp $(STAGING_DIR)/usr/share/batocera-es-system/es_external_translations.h $(STAGING_DIR)/usr/share/batocera-es-system/es_keys_translations.h $(@D)/es-app/src
 	for P in $(STAGING_DIR)/usr/share/batocera-es-system/locales/*; do if test -e $$P/batocera-es-system.po; then cp $(@D)/locale/lang/$$(basename $$P)/LC_MESSAGES/emulationstation2.po $(@D)/locale/lang/$$(basename $$P)/LC_MESSAGES/emulationstation2.po.tmp && $(HOST_DIR)/bin/msgcat $(@D)/locale/lang/$$(basename $$P)/LC_MESSAGES/emulationstation2.po.tmp $$P/batocera-es-system.po > $(@D)/locale/lang/$$(basename $$P)/LC_MESSAGES/emulationstation2.po; fi; done
 endef
 
@@ -140,17 +136,24 @@ ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER),y)
 BATOCERA_EMULATIONSTATION_PREFIX =
 BATOCERA_EMULATIONSTATION_CMD = startx
 BATOCERA_EMULATIONSTATION_ARGS = --windowed
-BATOCERA_EMULATIONSTATION_POST_INSTALL_TARGET_HOOKS += BATOCERA_EMULATIONSTATION_XINITRC
+BATOCERA_EMULATIONSTATION_POST_INSTALL_TARGET_HOOKS += BATOCERA_EMULATIONSTATION_XORG
 endif
 
 ## on Wayland sway runs ES
 ifeq ($(BR2_PACKAGE_SWAY),y)
-BATOCERA_EMULATIONSTATION_CMD = sway
+BATOCERA_EMULATIONSTATION_CMD = sway-launch
 BATOCERA_EMULATIONSTATION_DEPENDENCIES += sway
+BATOCERA_EMULATIONSTATION_POST_INSTALL_TARGET_HOOKS += BATOCERA_EMULATIONSTATION_WAYLAND
 endif
 
-define BATOCERA_EMULATIONSTATION_XINITRC
-	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/emulationstation/batocera-emulationstation/xinitrc $(TARGET_DIR)/etc/X11/xinit/xinitrc
+define BATOCERA_EMULATIONSTATION_XORG
+	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/emulationstation/batocera-emulationstation/xorg/xinitrc $(TARGET_DIR)/etc/X11/xinit/xinitrc
+endef
+
+define BATOCERA_EMULATIONSTATION_WAYLAND
+	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/emulationstation/batocera-emulationstation/wayland/04-sway.sh  $(TARGET_DIR)/etc/profile.d/04-sway.sh
+    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/emulationstation/batocera-emulationstation/wayland/config      $(TARGET_DIR)/etc/sway/config
+    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/emulationstation/batocera-emulationstation/wayland/sway-launch $(TARGET_DIR)/usr/bin/sway-launch
 endef
 
 define BATOCERA_EMULATIONSTATION_BOOT

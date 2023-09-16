@@ -230,7 +230,7 @@ def gunsNeedCrosses(guns):
 
 # returns None is no border is wanted
 def gunsBordersSizeName(guns, config):
-    bordersSize = "big"
+    bordersSize = "medium"
     if "controllers.guns.borderssize" in config and config["controllers.guns.borderssize"]:
         bordersSize = config["controllers.guns.borderssize"]
 
@@ -281,6 +281,31 @@ def getMouseButtons(device):
   if evdev.ecodes.BTN_8 in caps_intersection:
     buttons.append("8")
   return buttons
+
+def mouseButtonToCode(button):
+    if button == "left":
+        return evdev.ecodes.BTN_LEFT
+    if button == "right":
+        return evdev.ecodes.BTN_RIGHT
+    if button == "middle":
+        return evdev.ecodes.BTN_MIDDLE
+    if button == "1":
+        return evdev.ecodes.BTN_1
+    if button == "2":
+        return evdev.ecodes.BTN_2
+    if button == "3":
+        return evdev.ecodes.BTN_3
+    if button == "4":
+        return evdev.ecodes.BTN_4
+    if button == "5":
+        return evdev.ecodes.BTN_5
+    if button == "6":
+        return evdev.ecodes.BTN_6
+    if button == "7":
+        return evdev.ecodes.BTN_7
+    if button == "8":
+        return evdev.ecodes.BTN_8
+    return None
 
 def getGuns():
     import pyudev
@@ -348,12 +373,35 @@ def getGameGunsMetaData(system, rom):
     root = tree.getroot()
     game = gunNameFromPath(rom)
     res = {}
+    eslog.info("looking for gun metadata ({}, {})".format(system, game))
     for nodesystem in root.findall(".//system"):
         if nodesystem.get("name") == system:
             for nodegame in nodesystem:
                 if nodegame.text in game:
                     for attribute in nodegame.attrib:
                         res[attribute] = nodegame.get(attribute)
+                        eslog.info("found gun metadata {}={}".format(attribute, res[attribute]))
+                    return res
+    return res
+
+def getGameWheelsMetaData(system, rom):
+    # load the database
+    tree = ET.parse(batoceraFiles.esWheelsMetadata)
+    root = tree.getroot()
+    game = gunNameFromPath(rom)
+    res = {}
+    eslog.info("looking for wheel metadata ({}, {})".format(system, game))
+    for nodesystem in root.findall(".//system"):
+        if nodesystem.get("name") == system:
+            for attribute in nodesystem.attrib:
+                if attribute != "name":
+                    res[attribute] = nodesystem.get(attribute)
+                    eslog.info("found wheel system metadata {}={}".format(attribute, res[attribute]))
+            for nodegame in nodesystem:
+                if nodegame.text in game:
+                    for attribute in nodegame.attrib:
+                        res[attribute] = nodegame.get(attribute)
+                        eslog.info("found wheel metadata {}={}".format(attribute, res[attribute]))
                     return res
     return res
 
@@ -369,7 +417,8 @@ def getDevicesInformation():
     if matches != None:
       eventId = int(matches.group(1))
       isJoystick = ("ID_INPUT_JOYSTICK" in ev.properties and ev.properties["ID_INPUT_JOYSTICK"] == "1")
-      isMouse    = ("ID_INPUT_MOUSE" in ev.properties and ev.properties["ID_INPUT_MOUSE"] == "1") or ("ID_INPUT_TOUCHPAD" in ev.properties and ev.properties["ID_INPUT_TOUCHPAD"] == "1")
+      isWheel    = ("ID_INPUT_WHEEL"    in ev.properties and ev.properties["ID_INPUT_WHEEL"] == "1")
+      isMouse    = ("ID_INPUT_MOUSE"    in ev.properties and ev.properties["ID_INPUT_MOUSE"] == "1") or ("ID_INPUT_TOUCHPAD" in ev.properties and ev.properties["ID_INPUT_TOUCHPAD"] == "1")
       group = None
       if "ID_PATH" in ev.properties:
         group = ev.properties["ID_PATH"]
@@ -379,7 +428,7 @@ def getDevicesInformation():
         if isMouse:
           mouses.append(eventId)
         if "ID_PATH" in ev.properties:
-          devices[eventId] = { "node": ev.device_node, "group": ev.properties["ID_PATH"], "isJoystick": isJoystick, "isMouse": isMouse }
+          devices[eventId] = { "node": ev.device_node, "group": ev.properties["ID_PATH"], "isJoystick": isJoystick, "isWheel": isWheel, "isMouse": isMouse }
           if group not in groups:
             groups[group] = []
           groups[group].append(ev.device_node)
@@ -397,7 +446,7 @@ def getDevicesInformation():
     nmouse = None
     if d["isMouse"]:
       nmouse = mouses.index(device)
-    res[d["node"]] = { "isJoystick": d["isJoystick"], "isMouse": d["isMouse"], "associatedDevices": dgroup, "joystick_index": njoystick, "mouse_index": nmouse }
+    res[d["node"]] = { "isJoystick": d["isJoystick"], "isWheel": d["isWheel"], "isMouse": d["isMouse"], "associatedDevices": dgroup, "joystick_index": njoystick, "mouse_index": nmouse }
   return res
 
 def getAssociatedMouse(devicesInformation, dev):

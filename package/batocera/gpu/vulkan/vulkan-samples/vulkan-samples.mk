@@ -3,8 +3,8 @@
 # vulkan-samples
 #
 ################################################################################
-# Version: Commits on Oct 11, 2022
-VULKAN_SAMPLES_VERSION = 3f7545d8a0db718c4efc83c49cd71600c512ab52
+# Version: Commits on Jul 11, 2023
+VULKAN_SAMPLES_VERSION = 1fa4b013a9cd10e57fc6e54958f923eac0e68525
 VULKAN_SAMPLES_SITE =  https://github.com/KhronosGroup/Vulkan-Samples
 VULKAN_SAMPLES_GIT_SUBMODULES=YES
 VULKAN_SAMPLES_SITE_METHOD=git
@@ -17,9 +17,9 @@ VULKAN_SAMPLES_CONF_OPTS += -DBUILD_SHARED_LIBS=OFF
 VULKAN_SAMPLES_CONF_ENV += LDFLAGS="--lpthread -ldl"
 
 ifeq ($(BR2_x86_64),y)
-VULKAN_SAMPLES_CONF_OPTS += -DVKB_WSI_SELECTION=XCB
-else
-VULKAN_SAMPLES_CONF_OPTS += -DVKB_WSI_SELECTION=WAYLAND
+VULKAN_SAMPLES_CONF_OPTS += -DVKB_WSI_SELECTION=XCB -DGLFW_BUILD_X11=ON
+else ifeq ($(BR2_PACKAGE_WAYLAND),y)
+VULKAN_SAMPLES_CONF_OPTS += -DVKB_WSI_SELECTION=WAYLAND -DGLFW_BUILD_X11=OFF
 endif
 
 # Terrible temporary workaround for rpi4

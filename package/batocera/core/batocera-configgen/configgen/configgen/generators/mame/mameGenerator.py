@@ -28,7 +28,7 @@ class MameGenerator(Generator):
     def supportsInternalBezels(self):
         return True
 
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         # Extract "<romfile.zip>"
         romBasename = path.basename(rom)
         romDirname  = path.dirname(rom)
@@ -261,6 +261,11 @@ class MameGenerator(Generator):
         if system.isOptSet('offscreenreload') and system.getOptBoolean('offscreenreload'):
             commandArray += [ "-offscreen_reload" ]
 
+        # wheels
+        useWheels = False
+        if system.isOptSet('use_wheels') and system.getOptBoolean('use_wheels'):
+            useWheels = True
+
         # Finally we pass game name
         # MESS will use the full filename and pass the system & rom type parameters if needed.
         if messSysName[messMode] == "" or messMode == -1:
@@ -271,7 +276,6 @@ class MameGenerator(Generator):
             if system.isOptSet("altmodel"):
                 messModel = system.config["altmodel"]
             commandArray += [ messModel ]
-
 
             #TI-99 32k RAM expansion & speech modules - enabled by default
             if system.name == "ti99":
@@ -305,6 +309,10 @@ class MameGenerator(Generator):
                     else:
                         commandArray += ["-gameio", system.config['gameio']]
                         specialController = system.config['gameio']
+
+            # RAM size (Mac excluded, special handling below)
+            if system.name != "macintosh" and system.isOptSet("ramsize"):
+                commandArray += [ '-ramsize', str(system.config["ramsize"]) + 'M' ]
 
             # Mac RAM & Image Reader (if applicable)
             if system.name == "macintosh":
@@ -351,6 +359,15 @@ class MameGenerator(Generator):
                             commandArray += [ "-flop" ]
                         else:
                             commandArray += [ "-" + system.config["altromtype"] ]
+                    elif system.name == "adam":
+                        # add some logic based on the rom extension
+                        rom_extension = os.path.splitext(rom)[1].lower()
+                        if rom_extension == ".ddp":
+                            commandArray += [ "-cass1" ]
+                        elif rom_extension == ".dsk":
+                            commandArray += [ "-flop1" ]
+                        else:
+                            commandArray += [ "-cart1" ]
                     else:
                         commandArray += [ "-" + messRomType[messMode] ]
                 else:
@@ -470,9 +487,9 @@ class MameGenerator(Generator):
         buttonLayout = getMameControlScheme(system, romBasename)
 
         if messMode == -1:
-            mameControllers.generatePadsConfig(cfgPath, playersControllers, "", buttonLayout, customCfg, specialController, bezelSet, useGuns, useMouse, multiMouse)
+            mameControllers.generatePadsConfig(cfgPath, playersControllers, "", buttonLayout, customCfg, specialController, bezelSet, useGuns, guns, useWheels, wheels, useMouse, multiMouse)
         else:
-            mameControllers.generatePadsConfig(cfgPath, playersControllers, messModel, buttonLayout, customCfg, specialController, bezelSet, useGuns, useMouse, multiMouse)
+            mameControllers.generatePadsConfig(cfgPath, playersControllers, messModel, buttonLayout, customCfg, specialController, bezelSet, useGuns, guns, useWheels, wheels, useMouse, multiMouse)
 
         # Change directory to MAME folder (allows data plugin to load properly)
         os.chdir('/usr/bin/mame')
@@ -674,7 +691,7 @@ class MameGenerator(Generator):
         if gunsBordersSize is not None:
             output_png_file = "/tmp/bezel_gunborders.png"
             innerSize, outerSize = bezelsUtil.gunBordersSize(gunsBordersSize)
-            borderSize = bezelsUtil.gunBorderImage(tmpZipDir + "/" + pngFile, output_png_file, innerSize, outerSize)
+            borderSize = bezelsUtil.gunBorderImage(tmpZipDir + "/" + pngFile, output_png_file, innerSize, outerSize, bezelsUtil.gunsBordersColorFomConfig(system.config))
             try:
                 os.remove(tmpZipDir + "/" + pngFile)
             except:

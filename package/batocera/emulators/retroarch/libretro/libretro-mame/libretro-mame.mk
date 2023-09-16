@@ -3,11 +3,10 @@
 # libretro-mame
 #
 ################################################################################
-# Version: Commits on Sep 29, 2022 (v0.248)
-LIBRETRO_MAME_VERSION = fcacbc7811a9b69874fd09b91e7217e44c6a0980
+
+LIBRETRO_MAME_VERSION = lrmame0258
 LIBRETRO_MAME_SITE = $(call github,libretro,mame,$(LIBRETRO_MAME_VERSION))
 LIBRETRO_MAME_LICENSE = MAME
-LIBRETRO_MAME_DEPENDENCIES = retroarch
 
 # Limit number of jobs not to eat too much RAM....
 LIBRETRO_MAME_MAX_JOBS = 16
@@ -19,6 +18,8 @@ else ifeq ($(BR2_i386),y)
 LIBRETRO_MAME_EXTRA_ARGS += PTR64=0 LIBRETRO_CPU=x86 PLATFORM=x86
 else ifeq ($(BR2_arm),y)
 LIBRETRO_MAME_EXTRA_ARGS += PTR64=0 LIBRETRO_CPU=arm PLATFORM=arm
+# workaround for linkage failure using ld on arm 32-bit targets
+LIBRETRO_MAME_ARCHOPTS += -fuse-ld=gold -Wl,--long-plt
 # workaround for asmjit broken build system (arm backend is not public)
 LIBRETRO_MAME_ARCHOPTS += -D__arm__ -DASMJIT_BUILD_X86
 else ifeq ($(BR2_aarch64),y)

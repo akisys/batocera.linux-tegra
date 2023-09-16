@@ -15,7 +15,7 @@ BATOCERA_TARGET=$(grep -E "^BR2_PACKAGE_BATOCERA_TARGET_[A-Z_0-9]*=y$" "${BR2_CO
 sed -i "s|^root:x:.*$|root:x:0:0:root:/userdata/system:/bin/bash|g" "${TARGET_DIR}/etc/passwd" || exit 1
 
 rm -rf "${TARGET_DIR}/etc/dropbear" || exit 1
-ln -sf "/userdata/system/ssh" "${TARGET_DIR}/etc/dropbear" || exit 1
+ln -sf "/userdata/system/.ssh" "${TARGET_DIR}/etc/dropbear" || exit 1
 
 mkdir -p ${TARGET_DIR}/etc/emulationstation || exit 1
 ln -sf "/usr/share/emulationstation/es_systems.cfg" "${TARGET_DIR}/etc/emulationstation/es_systems.cfg" || exit 1
@@ -73,6 +73,7 @@ fi
 if test -e "${TARGET_DIR}/etc/init.d/S21rngd"
 then
     mv "${TARGET_DIR}/etc/init.d/S21rngd"    "${TARGET_DIR}/etc/init.d/S33rngd"    || exit 1 # move because it takes several seconds (on odroidgoa for example)
+    sed -i "s/start-stop-daemon -S -q /start-stop-daemon -S -q -N 10 /g" "${TARGET_DIR}/etc/init.d/S33rngd"  || exit 1 # set rngd niceness to 10 (to decrease slowdown of other processes)
 fi
 
 # remove kodi default joystick configuration files

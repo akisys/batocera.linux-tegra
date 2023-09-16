@@ -17,7 +17,7 @@ class FlycastGenerator(Generator):
 
     # Main entry of the module
     # Configure fba and return a command
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         # Write emu.cfg to map joysticks, init with the default emu.cfg
         Config = configparser.ConfigParser(interpolation=None)
         Config.optionxform = str
@@ -77,8 +77,20 @@ class FlycastGenerator(Generator):
         else:
             Config.set("config", "rend.Rotate90", "no")
         # renderer - default: OpenGL
-        if system.isOptSet("flycast_renderer"):
-            Config.set("config", "pvr.rend", str(system.config["flycast_renderer"]))
+        if system.isOptSet("flycast_renderer") and system.config["flycast_renderer"] == "0":
+            if system.isOptSet("flycast_sorting") and system.config["flycast_sorting"] == "3":
+                # per pixel
+                Config.set("config", "pvr.rend", "3")
+            else:
+                # per triangle
+                Config.set("config", "pvr.rend", "0")
+        elif system.isOptSet("flycast_renderer") and system.config["flycast_renderer"] == "4":
+            if system.isOptSet("flycast_sorting") and system.config["flycast_sorting"] == "3":
+                # per pixel
+                Config.set("config", "pvr.rend", "5")
+            else:
+                # per triangle
+                Config.set("config", "pvr.rend", "4")
         else:
             Config.set("config", "pvr.rend", "0")
         # anisotropic filtering
@@ -86,6 +98,12 @@ class FlycastGenerator(Generator):
             Config.set("config", "rend.AnisotropicFiltering", str(system.config["flycast_anisotropic"]))
         else:
             Config.set("config", "rend.AnisotropicFiltering", "1")
+        # transparent sorting
+        # per strip
+        if system.isOptSet("flycast_sorting") and system.config["flycast_sorting"] == "2":
+            Config.set("config", "rend.PerStripSorting", "yes")
+        else:
+            Config.set("config", "rend.PerStripSorting", "no")
         
         # [Dreamcast specifics]
         # language
@@ -137,12 +155,12 @@ class FlycastGenerator(Generator):
             cfgfile.close()
             
         # internal config
+        if not isdir(batoceraFiles.flycastSaves):
+            os.mkdir(batoceraFiles.flycastSaves)
+        if not isdir(batoceraFiles.flycastSaves + "/flycast"):
+            os.mkdir(batoceraFiles.flycastSaves + "/flycast")
         # vmuA1
         if not isfile(batoceraFiles.flycastVMUA1):
-            if not isdir(dirname(batoceraFiles.flycastSaves)):
-                os.mkdir(batoceraFiles.flycastSaves)
-            if not isdir(dirname(batoceraFiles.flycastSaves) + "/flycast"):
-                os.mkdir((batoceraFiles.flycastSaves) + "/flycast")
             copyfile(batoceraFiles.flycastVMUBlank, batoceraFiles.flycastVMUA1)
         # vmuA2
         if not isfile(batoceraFiles.flycastVMUA2):
@@ -156,9 +174,15 @@ class FlycastGenerator(Generator):
         # VMU will be in $XDG_DATA_HOME / $FLYCAST_DATADIR because it needs rw access -> /userdata/saves/dreamcast
         # $FLYCAST_BIOS_PATH is where Flaycast should find the bios files
         # controller cfg files are set with an absolute path, so no worry
-        return Command.Command(array=commandArray, env={"XDG_CONFIG_HOME":batoceraFiles.CONF,
-            "XDG_CONFIG_DIRS":batoceraFiles.CONF,
-            "XDG_DATA_HOME":batoceraFiles.flycastSaves,
-            "FLYCAST_DATADIR":batoceraFiles.flycastSaves,
-            "FLYCAST_BIOS_PATH":batoceraFiles.flycastBios,
-            })
+        return Command.Command(
+            array=commandArray,
+            env={
+                "XDG_CONFIG_HOME":batoceraFiles.CONF,
+                "XDG_CONFIG_DIRS":batoceraFiles.CONF,
+                "XDG_DATA_HOME":batoceraFiles.flycastSaves,
+                "FLYCAST_DATADIR":batoceraFiles.flycastSaves,
+                "FLYCAST_BIOS_PATH":batoceraFiles.flycastBios,
+                "SDL_GAMECONTROLLERCONFIG": controllersConfig.generateSdlGameControllerConfig(playersControllers),
+                "SDL_JOYSTICK_HIDAPI": "0"
+            }
+        )

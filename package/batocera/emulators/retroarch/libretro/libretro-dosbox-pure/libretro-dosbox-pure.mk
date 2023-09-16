@@ -16,9 +16,6 @@ LIBRETRO_DOSBOX_PURE_PLATFORM = rpi1
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2836),y)
 LIBRETRO_DOSBOX_PURE_PLATFORM = rpi2
 
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPIZERO2),y)
-LIBRETRO_DOSBOX_PURE_PLATFORM = rpi3
-
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2837),y)
 LIBRETRO_DOSBOX_PURE_PLATFORM = rpi3_64
 
@@ -49,7 +46,6 @@ endef
 define LIBRETRO_DOSBOX_PURE_INSTALL_TARGET_CMDS
 	$(INSTALL) -D $(@D)/dosbox_pure_libretro.so \
 	  $(TARGET_DIR)/usr/lib/libretro/dosbox_pure_libretro.so
-	cp -f $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/emulators/retroarch/libretro/libretro-dosbox-pure/dos.keys $(TARGET_DIR)/usr/share/evmapy/
 endef
 
 $(eval $(generic-package))

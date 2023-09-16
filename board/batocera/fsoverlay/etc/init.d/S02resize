@@ -1,6 +1,7 @@
 #!/bin/bash
 
 BOOTCONF="/boot/batocera-boot.conf"
+log="/tmp/resize.log"
 
 # only at start
 test "$1" != "start" && exit 0
@@ -28,56 +29,83 @@ function textoutput()
     local cmd="$3"
     local percent="$2"
     local pid ret
-    $cmd >> /tmp/resize.log 2>&1 &
+    echo "cmd:$cmd" >> $log
+    $cmd >> $log 2>&1 &
     ret=$?
     pid=$!
     arr[$1]=7 #msg: In Progress
     dialogoutput "$percent"
     wait $pid
+    code=$?
+    echo "cmd code:$code" >> $log
     arr[$1]=$ret #msg: Depends from return value
 }
 
 # only when resizing is wanted
 if grep -qE '^[ ]*autoresize[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"
 then
-
     # Preparing text arrays
     arr=(
-	"Removing trigger............" "Pending"
-	"Syncing disk data..........." "Pending"
-	"Checking disk table........." "Pending"
-	"Resizing partition.........." "Pending"
-	"Aligning /userdata.........." "Pending"
-	"Checking /userdata.........." "Pending"
-	"Resizing /userdata.........." "Pending"
+    "Aligning GPT table.........." "Pending"
+    "Resizing partition.........." "Pending"
+    "Informing the Kernel........" "Pending"
+    "Checking /userdata.........." "Pending"
+    "Resizing /userdata.........." "Pending"
+    "Syncing disk data..........." "Pending"
     )
 
     # --- BEGIN RESIZE ---
     # /userdata partition
     PART=$(batocera-part "share_internal")
+    echo "Partition = $PART" >> $log
     # boot disk
     DISK=$(batocera-part prefix "${PART}")
+    echo "Disk = $DISK" >> $log
 
     # only for ext4
     PARTTYPE=$(blkid "${PART}" | sed -e s+'^.* TYPE="\([^"]*\)\".*'+'\1'+)
     test "${PARTTYPE}" != "ext4" && exit 0
-
-    # fix any minor issues, such as gpt header not at end of disk
+    echo "Partition type = ${PARTTYPE}" >> $log
+    
     # remove the trigger
     mount -o remount,rw /boot && sed -i -e s+'^[ ]*autoresize'+'#autoresize'+ "${BOOTCONF}" && mount -o remount,ro /boot
 
     # textoutput "Message" "percentage" "command call" 
-    for i in 1 3 5 7 9 11 13; do
-	case $i in
-	    1) textoutput $i 01 "sleep 0.1";;
-	    3) textoutput $i 10 "sync";;
-	    5) textoutput $i 30 "sgdisk -e ${DISK}";;
-	    # resizepart can't use 100% otherwise problem with GPT copied at the end of the disk/sdcard
-	    7) textoutput $i 40 "parted -s -m ${DISK} resizepart 2 99%";;
-	    9) textoutput $i 45 "parted -s -m ${DISK} align-check opt 2";;
-	    11) textoutput $i 55 "e2fsck -f -p ${PART}";;
-	    13) textoutput $i 75 "resize2fs -f ${PART}";;
-	esac
+    for i in 1 3 5 7 9 11; do
+    case $i in
+        1) 
+           # move backup GPT data structures to the end of the disk
+           echo "Step $i: Moving 2nd GPT table to the end of the disk" >> "$log"
+           textoutput $i 10 "sgdisk -e ${DISK}";;
+        3) 
+           # resize the partition
+           echo "Step $i: Resizing the partition to 100%" >> "$log"
+           textoutput $i 50 "parted -s -m -f ${DISK} resizepart 2 100%";;
+        
+        5)
+           # update the kernel
+           echo "Step $i: Updating the kernel" >> "$log"
+           textoutput $i 60 "partprobe ${DISK}";;
+        7)
+           # check & resize the ext4 file system
+           if test "${PARTTYPE}" = "ext4"
+           then
+	           echo "Step $i: Checking ext4 file system" >> "$log"
+	           textoutput $i 70 "e2fsck -f -p ${PART}"
+           fi
+           ;;
+        9) 
+           if test "${PARTTYPE}" = "ext4"
+           then
+               echo "Step $i: Expanding ext4 the file system" >> "$log"
+               textoutput $i 80 "resize2fs ${PART}"
+           fi
+           ;;
+        11) 
+           # finally disk sync
+           echo "Step $i: Final sync" >> "$log"
+           textoutput $i 90 "sync";;
+    esac
     done
 
 else
@@ -86,9 +114,7 @@ else
     if test -n "${FORMAT_INTERNAL_TYPE}"
     then
 	# Preparing text arrays
-	arr=(
-	    "Formatting /userdata.........." "Pending"
-	)
+	arr=("Formatting /userdata.........." "Pending")
 	PART=$(batocera-part "share_internal")
 
 	# remove the trigger

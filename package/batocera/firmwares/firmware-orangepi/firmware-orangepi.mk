@@ -3,15 +3,15 @@
 # firmware-orangepi
 #
 ################################################################################
-# Version.: Commits on Sep 6, 2022
-FIRMWARE_ORANGEPI_VERSION = 70accf15b75b9a603920f0a8fda45d1739fd410c
+# Version.: Commits on Jun 2, 2023
+FIRMWARE_ORANGEPI_VERSION = d9c6dac6d934bd5923be573e99aac767681f2ca5
 FIRMWARE_ORANGEPI_SITE = $(call github,orangepi-xunlong,firmware,$(FIRMWARE_ORANGEPI_VERSION))
-FIRMWARE_ORANGEPI_DEPENDENCIES = alllinuxfirmwares
 
-FIRMWARE_ORANGEPI_TARGET_DIR=$(TARGET_DIR)/lib/firmware
+FIRMWARE_ORANGEPI_TARGET_DIR=$(TARGET_DIR)/lib/firmware/
 
 define FIRMWARE_ORANGEPI_INSTALL_TARGET_CMDS
-	cp -r $(@D)/* $(FIRMWARE_ORANGEPI_TARGET_DIR)
+	mkdir -p $(FIRMWARE_ORANGEPI_TARGET_DIR)
+	cp -a $(@D)/* $(FIRMWARE_ORANGEPI_TARGET_DIR)/
 endef
 
 $(eval $(generic-package))

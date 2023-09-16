@@ -3,8 +3,8 @@
 # libretro-tyrquake
 #
 ################################################################################
-# Version: Commits on Jul 24, 2022
-LIBRETRO_TYRQUAKE_VERSION = 89f3e032757b9b56e8d62a528a4a2472e60631aa
+# Version: Commits on Mar 15, 2023
+LIBRETRO_TYRQUAKE_VERSION = b3fcc43e57543ef499df91b5c5d931680addf070
 LIBRETRO_TYRQUAKE_SITE = $(call github,libretro,tyrquake,$(LIBRETRO_TYRQUAKE_VERSION))
 LIBRETRO_TYRQUAKE_LICENSE = GPLv2
 
@@ -18,9 +18,6 @@ LIBRETRO_TYRQUAKE_PLATFORM = rpi1
 
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2836),y)
 LIBRETRO_TYRQUAKE_PLATFORM = rpi2
-
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPIZERO2),y)
-LIBRETRO_TYRQUAKE_PLATFORM = rpi3
 
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2837),y)
 LIBRETRO_TYRQUAKE_PLATFORM = rpi3_64

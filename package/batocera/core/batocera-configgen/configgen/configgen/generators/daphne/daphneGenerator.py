@@ -7,11 +7,14 @@ import shutil
 import os
 import controllersConfig
 import filecmp
+from utils.logger import get_logger
+
+eslog = get_logger(__name__)
 
 class DaphneGenerator(Generator):
 
     # Main entry of the module
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         # copy input.ini file templates
         daphneConfigSource = "/usr/share/daphne/hypinput_gamepad.ini"
 
@@ -24,17 +27,38 @@ class DaphneGenerator(Generator):
         if not os.path.exists(batoceraFiles.daphneDatadir + "/custom.ini"):
             shutil.copyfile(batoceraFiles.daphneConfig, batoceraFiles.daphneDatadir + "/custom.ini")
             
-        # copy required resources to config
-        if not os.path.exists(batoceraFiles.daphneDatadir + "/pics"):
-            shutil.copytree("/usr/share/daphne/pics", batoceraFiles.daphneDatadir + "/pics")
-        if not os.path.exists(batoceraFiles.daphneDatadir + "/sound"):
-            shutil.copytree("/usr/share/daphne/sound", batoceraFiles.daphneDatadir + "/sound")
-        if not os.path.exists(batoceraFiles.daphneDatadir + "/fonts"):
-            shutil.copytree("/usr/share/daphne/fonts", batoceraFiles.daphneDatadir + "/fonts")
+        # copy required resources to userdata config folder as needed
+        def copy_resources(source_dir, destination_dir):
+            if not os.path.exists(destination_dir):
+                shutil.copytree(source_dir, destination_dir)
+            else:
+                for item in os.listdir(source_dir):
+                    source_item = os.path.join(source_dir, item)
+                    destination_item = os.path.join(destination_dir, item)
+                    if os.path.isfile(source_item):
+                        if not os.path.exists(destination_item) or os.path.getmtime(source_item) > os.path.getmtime(destination_item):
+                            shutil.copy2(source_item, destination_dir)
+                        elif os.path.isdir(source_item):
+                            copy_resources(source_item, destination_item)
+        
+        directories = [
+            {"source": "/usr/share/daphne/pics", "destination": batoceraFiles.daphneDatadir + "/pics"},
+            {"source": "/usr/share/daphne/sound", "destination": batoceraFiles.daphneDatadir + "/sound"},
+            {"source": "/usr/share/daphne/fonts", "destination": batoceraFiles.daphneDatadir + "/fonts"}
+        ]
+
+        # Copy/update directories
+        for directory in directories:
+            copy_resources(directory["source"], directory["destination"])
         
         # create symbolic link for singe
         if not os.path.exists(batoceraFiles.daphneDatadir + "/singe"):
+            if not os.path.exists(batoceraFiles.daphneHomedir + "/roms"):
+                os.mkdir(batoceraFiles.daphneHomedir + "/roms")
             os.symlink(batoceraFiles.daphneHomedir + "/roms", batoceraFiles.daphneDatadir + "/singe")
+        if not os.path.islink(batoceraFiles.daphneDatadir + "/singe"):
+            eslog.error("Your {} directory isn't a symlink, that's not good.".format(batoceraFiles.daphneDatadir + "/singe"))
+            
         
         # extension used .daphne and the file to start the game is in the folder .daphne with the extension .txt
         romName = os.path.splitext(os.path.basename(rom))[0]
@@ -48,7 +72,7 @@ class DaphneGenerator(Generator):
                             "-gamepad", "-datadir", batoceraFiles.daphneDatadir, "-homedir", batoceraFiles.daphneDatadir]
         else:
             commandArray = [batoceraFiles.batoceraBins[system.config['emulator']],
-                            romName, "vldp", "-framefile", frameFile, "-useoverlaysb", "2", "-fullscreen",
+                            romName, "vldp", "-framefile", frameFile, "-fullscreen",
                             "-fastboot", "-gamepad", "-datadir", batoceraFiles.daphneDatadir, "-homedir", batoceraFiles.daphneHomedir]
         
         # controller config file
@@ -69,12 +93,12 @@ class DaphneGenerator(Generator):
         else:
             commandArray.append("-opengl")
 
-        # Disable Bilinear Filtering
+        # Enable Bilinear Filtering
         if system.isOptSet('bilinear_filter') and system.getOptBoolean("bilinear_filter"):
-            commandArray.append("-nolinear_scale")
+            commandArray.append("-linear_scale")
 
         #The following options should only be set when os.path.isfile(singeFile) is true.
-        #-blend_sprites, -oversize_overlay, -nocrosshair, -sinden or -manymouse
+        #-blend_sprites, -nocrosshair, -sinden or -manymouse
         if os.path.isfile(singeFile):
             # Blend Sprites (Singe)
             if system.isOptSet('blend_sprites') and system.getOptBoolean("blend_sprites"):
@@ -82,12 +106,25 @@ class DaphneGenerator(Generator):
 
             bordersSize = controllersConfig.gunsBordersSizeName(guns, system.config)
             if bordersSize is not None:
+
+                borderColor = "w"
+                if "controllers.guns.borderscolor" in system.config:
+                    borderColorOpt = system.config["controllers.guns.borderscolor"]
+                    if borderColorOpt == "white":
+                        borderColor = "w"
+                    elif borderColorOpt == "red":
+                        borderColor = "r"
+                    elif borderColorOpt == "green":
+                        borderColor = "g"
+                    elif borderColorOpt == "blue":
+                        borderColor = "b"
+
                 if bordersSize == "thin":
-                    commandArray.extend(["-sinden", "1", "w"])
+                    commandArray.extend(["-sinden", "2", borderColor])
                 elif bordersSize == "medium":
-                    commandArray.extend(["-sinden", "2", "w"])
+                    commandArray.extend(["-sinden", "4", borderColor])
                 else:
-                    commandArray.extend(["-sinden", "3", "w"])
+                    commandArray.extend(["-sinden", "6", borderColor])
             else:
                 if len(guns) > 0: # enable manymouse for guns
                     commandArray.extend(["-manymouse"]) # sinden implies manymouse
@@ -95,10 +132,6 @@ class DaphneGenerator(Generator):
                     if system.isOptSet('abs_mouse_input') and system.getOptBoolean("abs_mouse_input"):
                         commandArray.extend(["-manymouse"]) # this is causing issues on some "non-gun" games
 
-            # Oversize Overlay (Singe) for HD lightgun games
-            if system.isOptSet('lightgun_hd') and system.getOptBoolean("lightgun_hd"):
-                commandArray.append("-oversize_overlay")
-            
             # crosshair
             if system.isOptSet('daphne_crosshair'):
                 if not system.getOptBoolean("daphne_crosshair"):
@@ -107,7 +140,7 @@ class DaphneGenerator(Generator):
                     if not controllersConfig.gunsNeedCrosses(guns):
                         commandArray.append("-nocrosshair")
 
-        # Invert Axis
+        # Invert HAT Axis
         if system.isOptSet('invert_axis') and system.getOptBoolean("invert_axis"):
             commandArray.append("-tiphat")
 
@@ -129,7 +162,7 @@ class DaphneGenerator(Generator):
         if system.isOptSet('daphne_scanlines') and system.getOptBoolean("daphne_scanlines"):
             commandArray.append("-scanlines")
 
-        # Hide crosshair in supported games (e.g. ActionMax)
+        # Hide crosshair in supported games (e.g. ActionMax, ALG)
         if system.isOptSet('singe_crosshair') and system.getOptBoolean("singe_crosshair"):
             commandArray.append("-nocrosshair")
 
@@ -147,8 +180,9 @@ class DaphneGenerator(Generator):
             env={
                 'SDL_GAMECONTROLLERCONFIG': controllersConfig.generateSdlGameControllerConfig(playersControllers),
                 'SDL_JOYSTICK_HIDAPI': '0'
-            })
-
+            }
+        )
+    
     def getInGameRatio(self, config, gameResolution, rom):
         romName = os.path.splitext(os.path.basename(rom))[0]        
         singeFile = rom + "/" + romName + ".singe"

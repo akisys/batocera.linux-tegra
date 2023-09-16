@@ -3,11 +3,11 @@
 # retroarch
 #
 ################################################################################
-
-RETROARCH_VERSION = v1.13.0
+# Version.: Commits on Jul 13, 2023
+RETROARCH_VERSION = 227a9ec34ab6ce0a24b16e003142aed083d34c6b
 RETROARCH_SITE = $(call github,libretro,RetroArch,$(RETROARCH_VERSION))
 RETROARCH_LICENSE = GPLv3+
-RETROARCH_DEPENDENCIES = host-pkgconf dejavu retroarch-assets flac
+RETROARCH_DEPENDENCIES = host-pkgconf dejavu retroarch-assets flac noto-cjk-fonts
 # install in staging for debugging (gdb)
 RETROARCH_INSTALL_STAGING = YES
 
@@ -37,6 +37,12 @@ else
 	else
         RETROARCH_CONF_OPTS += --disable-sdl
 	endif
+endif
+
+ifeq ($(BR2_PACKAGE_RPI_USERLAND),y)
+    RETROARCH_CONF_OPTS += --enable-videocore
+else
+    RETROARCH_CONF_OPTS += --disable-videocore
 endif
 
 ifeq ($(BR2_PACKAGE_LIBDRM),y)
@@ -115,12 +121,15 @@ else
 endif
 
 ifeq ($(BR2_PACKAGE_ROCKCHIP_RGA),y)
-    RETROARCH_CONF_OPTS += --enable-odroidgo2
     RETROARCH_DEPENDENCIES += rockchip-rga
 endif
 
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RK3326),y)
+    RETROARCH_CONF_OPTS += --enable-odroidgo2
+endif
+
 ifeq ($(BR2_PACKAGE_HAS_LIBGL),y)
-  ifneq ($(BR2_PACKAGE_BATOCERA_SBC_XORG)$(BR2_PACKAGE_XWAYLAND),y)
+  ifneq ($(BR2_PACKAGE_XWAYLAND),y)
     RETROARCH_CONF_OPTS += --enable-opengl --disable-opengles --disable-opengles3
     RETROARCH_DEPENDENCIES += libgl
   endif
@@ -141,7 +150,11 @@ endif
 
 ifeq ($(BR2_PACKAGE_VULKAN_LOADER)$(BR2_PACKAGE_VULKAN_HEADERS),yy)
     RETROARCH_CONF_OPTS += --enable-vulkan
-    RETROARCH_DEPENDENCIES += vulkan-headers vulkan-loader
+    RETROARCH_DEPENDENCIES += vulkan-headers vulkan-loader slang-shaders
+endif
+
+ifeq ($(BR2_riscv),y)
+	RETROARCH_TARGET_CFLAGS += -DMESA_EGL_NO_X11_HEADERS=1
 endif
 
 define RETROARCH_CONFIGURE_CMDS
@@ -149,7 +162,7 @@ define RETROARCH_CONFIGURE_CMDS
 		$(TARGET_CONFIGURE_ARGS) \
 		$(TARGET_CONFIGURE_OPTS) \
 		CFLAGS="$(TARGET_CFLAGS) $(RETROARCH_TARGET_CFLAGS)" \
-		LDFLAGS="$(TARGET_LDFLAGS) -lc" \
+		LDFLAGS="$(TARGET_LDFLAGS) $(RETROARCH_TARGET_LDFLAGS) -lc" \
 		CROSS_COMPILE="$(HOST_DIR)/usr/bin/" \
 		./configure \
 		--prefix=/usr \
@@ -222,8 +235,4 @@ endif
 
 ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2711),y)
     LIBRETRO_PLATFORM += rpi4_64
-endif
-
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPIZERO2),y)
-    LIBRETRO_PLATFORM += rpi3
 endif

@@ -9,16 +9,17 @@ from utils.logger import get_logger
 import glob
 import configparser
 import re
+import controllersConfig
 
 eslog = get_logger(__name__)
 
 # Create the controller configuration file
 def generateControllerConfig(system, playersControllers, rom, guns):
 
-    generateHotkeys(playersControllers)
+    #generateHotkeys(playersControllers)
     if system.name == "wii":
         if system.isOptSet('use_guns') and system.getOptBoolean('use_guns') and len(guns) > 0:
-            generateControllerConfig_guns("WiimoteNew.ini", "Wiimote", guns)
+            generateControllerConfig_guns("WiimoteNew.ini", "Wiimote", guns, system, rom)
             generateControllerConfig_gamecube(system, playersControllers, rom)           # You can use the gamecube pads on the wii together with wiimotes
         elif (system.isOptSet('emulatedwiimotes') and system.getOptBoolean('emulatedwiimotes') == False):
             # Generate if hardcoded
@@ -28,7 +29,7 @@ def generateControllerConfig(system, playersControllers, rom, guns):
             # Generate if hardcoded
             generateControllerConfig_emulatedwiimotes(system, playersControllers, rom)
             removeControllerConfig_gamecube()                                           # Because pads will already be used as emulated wiimotes
-        elif (".cc." in rom or ".side." in rom or ".is." in rom or ".it." in rom or ".in." in rom or ".ti." in rom or ".ts." in rom or ".tn." in rom or ".ni." in rom or ".ns." in rom or ".nt." in rom) or system.isOptSet("sideWiimote"):
+        elif (".cc." in rom or ".pro." in rom or ".side." in rom or ".is." in rom or ".it." in rom or ".in." in rom or ".ti." in rom or ".ts." in rom or ".tn." in rom or ".ni." in rom or ".ns." in rom or ".nt." in rom) or system.isOptSet("sideWiimote"):
             # Generate if auto and name extensions are present
             generateControllerConfig_emulatedwiimotes(system, playersControllers, rom)
             removeControllerConfig_gamecube()                                           # Because pads will already be used as emulated wiimotes
@@ -40,24 +41,34 @@ def generateControllerConfig(system, playersControllers, rom, guns):
     else:
         raise ValueError("Invalid system name : '" + system.name + "'")
 
+# https://docs.libretro.com/library/dolphin/
+
 def generateControllerConfig_emulatedwiimotes(system, playersControllers, rom):
     wiiMapping = {
-        'x':            'Buttons/2',    'b':             'Buttons/A',
-        'y':            'Buttons/1',    'a':             'Buttons/B',
-        'pageup':       'Buttons/-',    'pagedown':      'Buttons/+',
-        'select':       'Buttons/Home',
-        'up': 'D-Pad/Up', 'down': 'D-Pad/Down', 'left': 'D-Pad/Left', 'right': 'D-Pad/Right',
-        'joystick1up':  'IR/Up',        'joystick1left': 'IR/Left',
-        'joystick2up':  'Tilt/Forward', 'joystick2left': 'Tilt/Left',
-        'hotkey':       'Buttons/Hotkey'
+        'x':             'Buttons/2',
+        'b':             'Buttons/A',
+        'y':             'Buttons/1',
+        'a':             'Buttons/B',
+        'pageup':        'Buttons/-',
+        'pagedown':      'Buttons/+',
+        'select':        'Buttons/Home',
+        'up':            'D-Pad/Up',
+        'down':          'D-Pad/Down',
+        'left':          'D-Pad/Left',
+        'right':         'D-Pad/Right',
+        'joystick1up':   'IR/Up',
+        'joystick1left': 'IR/Left',
+        'joystick2up':   'Tilt/Forward',
+        'joystick2left': 'Tilt/Left',
+        'hotkey':        'Buttons/Hotkey'
     }
     wiiReverseAxes = {
-        'IR/Up':        'IR/Down',
-        'IR/Left':      'IR/Right',
-        'Swing/Up':     'Swing/Down',
-        'Swing/Left':   'Swing/Right',
-        'Tilt/Left':    'Tilt/Right',
-        'Tilt/Forward': 'Tilt/Backward',
+        'IR/Up':                    'IR/Down',
+        'IR/Left':                  'IR/Right',
+        'Swing/Up':                 'Swing/Down',
+        'Swing/Left':               'Swing/Right',
+        'Tilt/Left':                'Tilt/Right',
+        'Tilt/Forward':             'Tilt/Backward',
         'Nunchuk/Stick/Up':         'Nunchuk/Stick/Down',
         'Nunchuk/Stick/Left':       'Nunchuk/Stick/Right',
         'Classic/Right Stick/Up':   'Classic/Right Stick/Down',
@@ -122,19 +133,16 @@ def generateControllerConfig_emulatedwiimotes(system, playersControllers, rom):
         wiiMapping['joystick2up']   = 'Nunchuk/Stick/Up'
         wiiMapping['joystick2left'] = 'Nunchuk/Stick/Left'
 
-    # cc : Classic Controller Settings
-    if (".cc." in rom) or (system.isOptSet("controller_mode") and system.config['controller_mode'] == 'cc'):
+    # cc : Classic Controller Settings / pro : Classic Controller Pro Settings
+    # Swap shoulder with triggers and vice versa if cc
+    if (".cc." in rom or ".pro." in rom) or (system.isOptSet("controller_mode") and system.config['controller_mode'] in ('cc', 'pro')):
         extraOptions['Extension']   = 'Classic'
         wiiMapping['x'] = 'Classic/Buttons/X'
         wiiMapping['y'] = 'Classic/Buttons/Y'
         wiiMapping['b'] = 'Classic/Buttons/B'
         wiiMapping['a'] = 'Classic/Buttons/A'
         wiiMapping['select'] = 'Classic/Buttons/-'
-        wiiMapping['start'] = 'Classic/Buttons/+'
-        wiiMapping['pageup'] = 'Classic/Triggers/L'
-        wiiMapping['pagedown'] = 'Classic/Triggers/R'
-        wiiMapping['l2'] = 'Classic/Buttons/ZL'
-        wiiMapping['r2'] = 'Classic/Buttons/ZR'
+        wiiMapping['start'] = 'Classic/Buttons/+'     
         wiiMapping['up'] = 'Classic/D-Pad/Up'
         wiiMapping['down'] = 'Classic/D-Pad/Down'
         wiiMapping['left'] = 'Classic/D-Pad/Left'
@@ -142,7 +150,17 @@ def generateControllerConfig_emulatedwiimotes(system, playersControllers, rom):
         wiiMapping['joystick1up'] = 'Classic/Left Stick/Up'
         wiiMapping['joystick1left'] = 'Classic/Left Stick/Left'
         wiiMapping['joystick2up'] = 'Classic/Right Stick/Up'
-        wiiMapping['joystick2left'] = 'Classic/Right Stick/Left'
+        wiiMapping['joystick2left'] = 'Classic/Right Stick/Left'               
+        if (".cc." in rom or system.config['controller_mode'] == 'cc'): 
+            wiiMapping['pageup'] = 'Classic/Buttons/ZL'
+            wiiMapping['pagedown'] = 'Classic/Buttons/ZR'
+            wiiMapping['l2'] = 'Classic/Triggers/L'
+            wiiMapping['r2'] = 'Classic/Triggers/R'
+        else:
+            wiiMapping['pageup'] = 'Classic/Triggers/L'
+            wiiMapping['pagedown'] = 'Classic/Triggers/R'
+            wiiMapping['l2'] = 'Classic/Buttons/ZL'
+            wiiMapping['r2'] = 'Classic/Buttons/ZR'
 
     # This section allows a per ROM override of the default key options.
     configname = rom + ".cfg"       # Define ROM configuration name
@@ -163,14 +181,23 @@ def generateControllerConfig_emulatedwiimotes(system, playersControllers, rom):
 
 def generateControllerConfig_gamecube(system, playersControllers,rom):
     gamecubeMapping = {
-        'y':            'Buttons/B',     'b':             'Buttons/A',
-        'x':            'Buttons/Y',     'a':             'Buttons/X',
-        'pagedown':     'Buttons/Z',     'start':         'Buttons/Start',
-        'l2':           'Triggers/L',    'r2':            'Triggers/R',
-        'up': 'D-Pad/Up', 'down': 'D-Pad/Down', 'left': 'D-Pad/Left', 'right': 'D-Pad/Right',
-        'joystick1up':  'Main Stick/Up', 'joystick1left': 'Main Stick/Left',
-        'joystick2up':  'C-Stick/Up',    'joystick2left': 'C-Stick/Left',
-        'hotkey':       'Buttons/Hotkey'
+        'b':             'Buttons/B',
+        'a':             'Buttons/A',
+        'y':             'Buttons/Y',
+        'x':             'Buttons/X',
+        'pagedown':      'Buttons/Z',
+        'start':         'Buttons/Start',
+        'l2':            'Triggers/L',
+        'r2':            'Triggers/R',
+        'up':            'D-Pad/Up',
+        'down':          'D-Pad/Down',
+        'left':          'D-Pad/Left',
+        'right':         'D-Pad/Right',
+        'joystick1up':   'Main Stick/Up',
+        'joystick1left': 'Main Stick/Left',
+        'joystick2up':   'C-Stick/Up',
+        'joystick2left': 'C-Stick/Left',
+        'hotkey':        'Buttons/Hotkey'
     }
     gamecubeReverseAxes = {
         'Main Stick/Up':   'Main Stick/Down',
@@ -215,15 +242,20 @@ def generateControllerConfig_realwiimotes(filename, anyDefKey):
         f.write("[" + anyDefKey + str(nplayer) + "]" + "\n")
         f.write("Source = 2\n")
         nplayer += 1
+    f.write("[BalanceBoard]\nSource = 2\n")
     f.write
     f.close()
 
-def generateControllerConfig_guns(filename, anyDefKey, guns):
+def generateControllerConfig_guns(filename, anyDefKey, guns, system, rom):
     configFileName = f"{batoceraFiles.dolphinConfig}/{filename}"
     f = codecs.open(configFileName, "w", encoding="utf_8_sig")
 
     # In case of two pads having the same name, dolphin wants a number to handle this
     double_pads = dict()
+
+    gunsmetadata = {}
+    if len(guns) > 0:
+        gunsmetadata = controllersConfig.getGameGunsMetaData(system.name, rom)
 
     nplayer = 1
     while nplayer <= 4:
@@ -258,46 +290,59 @@ def generateControllerConfig_guns(filename, anyDefKey, guns):
 
             # extra buttons
             mappings = {
-                "Home": "4",
-                "-": "1",
-                "1": "2",
-                "2": "3",
-                "+": "middle"
-            }
-
-            mapping_words = {
-                "middle": "BTN_MIDDLE"
+                "Home": { "code": "BTN_4", "button": "4" },
+                "-":    { "code": "BTN_1", "button": "1" },
+                "1":    { "code": "BTN_2", "button": "2" },
+                "2":    { "code": "BTN_3", "button": "3" },
+                "+":    { "code": "BTN_MIDDLE", "button": "middle" },
             }
 
             # for a button for + because it is an important button
-            if mappings["+"] not in buttons:
+            if mappings["+"]["button"] not in buttons:
                 for key in mappings:
-                    if mappings[key] in buttons:
-                        mappings["+"] = mappings[key]
-                        mappings[key] = None
+                    if mappings[key]["button"] in buttons:
+                        mappings["+"]["code"]   = mappings[key]["code"]
+                        mappings["+"]["button"] = mappings[key]["button"]
+                        mappings[key]["code"] = None
+                        mappings[key]["button"] = None
                         break
 
             for mapping in mappings:
-                if mappings[mapping] in buttons:
-                    if mappings[mapping] in mapping_words:
-                        f.write("Buttons/" + mapping + " = `" + mapping_words[mappings[mapping]] + "`\n")
-                    else:
-                        f.write("Buttons/" + mapping + " = `" + mappings[mapping] + "`\n")
+                if mappings[mapping]["button"] in buttons:
+                    f.write("Buttons/" + mapping + " = `" + mappings[mapping]["code"] + "`\n")
 
             # directions
             if "5" in buttons:
-                f.write("D-Pad/Up = `5`\n")
+                f.write("D-Pad/Up = `BTN_5`\n")
             if "6" in buttons:
-                f.write("D-Pad/Down = `6`\n")
+                f.write("D-Pad/Down = `BTN_6`\n")
             if "7" in buttons:
-                f.write("D-Pad/Left = `7`\n")
+                f.write("D-Pad/Left = `BTN_7`\n")
             if "8" in buttons:
-                f.write("D-Pad/Right = `8`\n")
+                f.write("D-Pad/Right = `BTN_8`\n")
 
-            f.write("IR/Up = `Axis 1-`\n")
-            f.write("IR/Down = `Axis 1+`\n")
-            f.write("IR/Left = `Axis 0-`\n")
-            f.write("IR/Right = `Axis 0+`\n")
+            if "ir_up" not in gunsmetadata:
+                f.write("IR/Up = `Axis 1-`\n")
+            if "ir_down" not in gunsmetadata:
+                f.write("IR/Down = `Axis 1+`\n")
+            if "ir_left" not in gunsmetadata:
+                f.write("IR/Left = `Axis 0-`\n")
+            if "ir_right" not in gunsmetadata:
+                f.write("IR/Right = `Axis 0+`\n")
+
+            # specific games configurations
+            specifics = {
+                "vertical_offset": "IR/Vertical Offset",
+                "yaw":             "IR/Total Yaw",
+                "pitch":           "IR/Total Pitch",
+                "ir_up":           "IR/Up",
+                "ir_down":         "IR/Down",
+                "ir_left":         "IR/Left",
+                "ir_right":        "IR/Right",
+            }
+            for spe in specifics:
+                if spe in gunsmetadata:
+                    f.write("{} = {}\n".format(specifics[spe], gunsmetadata[spe]))
         nplayer += 1
     f.write
     f.close()
@@ -307,13 +352,22 @@ def generateHotkeys(playersControllers):
     f = codecs.open(configFileName, "w", encoding="utf_8_sig")
 
     hotkeysMapping = {
-        'a':           'Keys/Reset',                    'b': 'Keys/Toggle Pause',
-        'x':           'Keys/Load from selected slot',  'y': 'Keys/Save to selected slot',
-        'r2':          None,                            'start': 'Keys/Exit',
-        'pageup': 'Keys/Take Screenshot', 'pagedown': 'Keys/Toggle 3D Side-by-side',
-        'up': 'Keys/Select State Slot 1', 'down': 'Keys/Select State Slot 2', 'left': None, 'right': None,
-        'joystick1up': None,    'joystick1left': None,
-        'joystick2up': None,    'joystick2left': None
+        'a':             'Keys/Reset',
+        'b':             'Keys/Toggle Pause',
+        'x':             'Keys/Load from selected slot',
+        'y':             'Keys/Save to selected slot',
+        'r2':            None,
+        'start':         'Keys/Exit',
+        'pageup':        'Keys/Take Screenshot',
+        'pagedown':      'Keys/Toggle 3D Side-by-side',
+        'up':            'Keys/Increase Selected State Slot',
+        'down':          'Keys/Decrease Selected State Slot',
+        'left':          None,
+        'right':         None,
+        'joystick1up':   None,
+        'joystick1left': None,
+        'joystick2up':   None,
+        'joystick2left': None
     }
 
     nplayer = 1
@@ -472,9 +526,9 @@ def write_key(f, keyname, input_type, input_id, input_value, input_global_id, re
         f.write("Button " + str(input_id))
     elif input_type == "hat":
         if input_value == "1" or input_value == "4":        # up or down
-            f.write("Axis " + str(int(input_global_id)+1))
+            f.write("Axis " + str(int(input_global_id)+1+int(input_id)*2))
         else:
-            f.write("Axis " + str(input_global_id))
+            f.write("Axis " + str(int(input_global_id)+int(input_id)*2))
         if input_value == "1" or input_value == "8":        # up or left
             f.write("-")
         else:
